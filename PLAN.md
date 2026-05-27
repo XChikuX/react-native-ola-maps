@@ -150,22 +150,21 @@ react-native-ola-maps/
 - [x] Research ola-map-sdk API surface
 - [x] Research @maplibre/maplibre-react-native v11
 - [x] Research react-native-radar patterns
-- [ ] Create CLAUDE.md
-- [ ] Create PLAN.md
-- [ ] Convert license to GNU LGPLv3
-- [ ] Migrate to bun
-- [ ] Add react-native-best-practices skill
-- [ ] Nuke old code, keep skeleton
+- [x] Create CLAUDE.md
+- [x] Create PLAN.md
+- [x] Convert license to GNU LGPLv3
+- [x] Migrate to bun
+- [x] Nuke old code, keep skeleton
 
 ### Phase 2: Core SDK (Next)
-- [ ] Implement OlaMapsClient with fetch-based HTTP
-- [ ] Implement Places API module
-- [ ] Implement Routing API module
-- [ ] Implement Roads API module
-- [ ] Implement Geofencing API module
-- [ ] Implement Elevation API module
-- [ ] Implement Tiles API module
-- [ ] Full TypeScript types for all APIs
+- [x] Implement OlaMapsClient with fetch-based HTTP
+- [x] Implement Places API module
+- [x] Implement Routing API module
+- [x] Implement Roads API module
+- [x] Implement Geofencing API module
+- [x] Implement Elevation API module
+- [x] Implement Tiles API module
+- [x] Full TypeScript types for all APIs
 
 ### Phase 3: React Native Components
 - [ ] OlaMapsProvider context

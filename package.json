@@ -1,8 +1,8 @@
 {
   "name": "react-native-ola-maps",
   "version": "0.2.0",
-  "description": "react-native-ola-maps is a powerful and flexible map library for React Native applications, designed to provide seamless integration of interactive maps for both Android and iOS platforms. Built with native map SDKs (Ola Maps for Android and iOS), this library allows developers to create immersive, high-performance mapping experiences.",
-  "source": "./src/index.tsx",
+  "description": "React Native SDK for Ola Maps — TypeScript API client + MapLibre-powered map components",
+  "source": "./src/index.ts",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",
   "exports": {
@@ -20,25 +20,15 @@
   "files": [
     "src",
     "lib",
-    "android",
-    "ios",
-    "cpp",
-    "*.podspec",
-    "!ios/build",
-    "!android/build",
-    "!android/gradle",
-    "!android/gradlew",
-    "!android/gradlew.bat",
-    "!android/local.properties",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace react-native-ola-maps-example",
+    "example": "cd example && bun start",
     "test": "jest",
-    "typecheck": "tsc",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "prepare": "bob build",
@@ -57,14 +47,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wadhia-yash/react-native-ola-maps.git"
+    "url": "git+https://github.com/XChikuX/react-native-ola-maps.git"
   },
-  "author": "Yash Wadhia <aarushwadhia@gmail.com> (https://github.com/wadhia-yash)",
-  "license": "MIT",
+  "author": "XChikuX",
+  "license": "LGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/wadhia-yash/react-native-ola-maps/issues"
+    "url": "https://github.com/XChikuX/react-native-ola-maps/issues"
   },
-  "homepage": "https://github.com/wadhia-yash/react-native-ola-maps#readme",
+  "homepage": "https://github.com/XChikuX/react-native-ola-maps#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
@@ -96,10 +86,7 @@
     "react": "*",
     "react-native": "*"
   },
-  "workspaces": [
-    "example"
-  ],
-  "packageManager": "yarn@3.6.1",
+  "packageManager": "bun@1.2.0",
   "jest": {
     "preset": "react-native",
     "modulePathIgnorePatterns": [
@@ -184,13 +171,5 @@
       ]
     ]
   },
-  "create-react-native-library": {
-    "type": "module-legacy",
-    "languages": "kotlin-swift",
-    "version": "0.41.0"
-  },
-  "types": "./lib/typescript/commonjs/src/index.d.ts",
-  "directories": {
-    "example": "example"
-  }
+  "types": "./lib/typescript/commonjs/src/index.d.ts"
 }
