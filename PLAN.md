@@ -57,6 +57,7 @@ react-native-ola-maps/
 ## API Surface (ola-map-sdk fidelity)
 
 ### 1. Places API
+
 - `autocomplete(input, options?)` → search suggestions
 - `geocode(address, language?)` → lat/lng from address
 - `reverseGeocode(lat, lng, language?)` → address from lat/lng
@@ -69,6 +70,7 @@ react-native-ola-maps/
 - `photo(photoReference)` → place photo
 
 ### 2. Routing API
+
 - `getDirections(origin, destination, options?)` → route with traffic
 - `getDirectionsBasic(origin, destination, options?)` → route without traffic
 - `getDistanceMatrix(origins, destinations, options?)` → distance/duration matrix
@@ -77,11 +79,13 @@ react-native-ola-maps/
 - `fleetPlanner(inputData, strategy, options?)` → fleet optimization
 
 ### 3. Roads API
+
 - `snapToRoad(points, interpolate?)` → snapped GPS points
 - `nearestRoads(points, mode?, radius?)` → nearest road segments
 - `speedLimits(points)` → speed limit data
 
 ### 4. Geofencing API
+
 - `create(geofenceData)` → create geofence
 - `getById(fenceId)` → get geofence
 - `update(fenceId, data)` → update geofence
@@ -90,10 +94,12 @@ react-native-ola-maps/
 - `checkStatus(fenceId, location)` → inside/outside check
 
 ### 5. Elevation API
+
 - `getElevation(lat, lng)` → single point elevation
 - `getMultiElevation(points)` → multiple points elevation
 
 ### 6. Tiles/Map Helpers
+
 - `getStyleURL(styleName?)` → MapLibre style URL
 - `getTransformRequest()` → request transformer with API key
 - `getMapOptions(options?)` → full MapLibre map config
@@ -103,6 +109,7 @@ react-native-ola-maps/
 ## Existing Code Analysis
 
 ### Current State (to be removed)
+
 - **Android**: Uses `com.ola.mapsdk` native SDK directly (OlaMapView, OlaMap, OlaLatLng)
   - API key from AndroidManifest meta-data: `com.ola.mapsdk.API_KEY`
   - Native ViewManager pattern with `requireNativeComponent`
@@ -112,40 +119,43 @@ react-native-ola-maps/
 - **JS Layer**: Minimal - just a MapView component with `initialRegion` and `onMapReady`
 
 ### API Base URL
+
 - `https://api.olamaps.io` (all endpoints)
 - Authentication: `api_key` query parameter on all requests
 
 ### Key Endpoints Discovered
-| Service | Base Path |
-|---------|-----------|
-| Places | `/places/v1/` |
-| Routing | `/routing/v1/` |
-| Roads | `/routing/v1/` (snap-to-road, nearest-roads, speed-limits) |
-| Geofencing | `/geofencing/v1/` |
-| Elevation | `/elevation/v1/` |
-| Tiles | `/tiles/vector/v1/` |
+
+| Service    | Base Path                                                  |
+| ---------- | ---------------------------------------------------------- |
+| Places     | `/places/v1/`                                              |
+| Routing    | `/routing/v1/`                                             |
+| Roads      | `/routing/v1/` (snap-to-road, nearest-roads, speed-limits) |
+| Geofencing | `/geofencing/v1/`                                          |
+| Elevation  | `/elevation/v1/`                                           |
+| Tiles      | `/tiles/vector/v1/`                                        |
 
 ---
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|------------|
-| Package Manager | **bun** |
-| Map Rendering | `@maplibre/maplibre-react-native` v11 |
-| Language | TypeScript (strict) |
-| Build | react-native-builder-bob |
-| HTTP Client | Native `fetch` (no axios dependency) |
-| Module System | Turbo Modules (React Native new architecture) |
-| Testing | Jest + @testing-library/react-native |
-| Linting | ESLint (flat config) + Prettier |
-| Example App | Expo |
+| Component       | Technology                                    |
+| --------------- | --------------------------------------------- |
+| Package Manager | **bun**                                       |
+| Map Rendering   | `@maplibre/maplibre-react-native` v11         |
+| Language        | TypeScript (strict)                           |
+| Build           | react-native-builder-bob                      |
+| HTTP Client     | Native `fetch` (no axios dependency)          |
+| Module System   | Turbo Modules (React Native new architecture) |
+| Testing         | Jest + @testing-library/react-native          |
+| Linting         | ESLint (flat config) + Prettier               |
+| Example App     | Expo                                          |
 
 ---
 
 ## Migration Steps
 
 ### Phase 1: Foundation (Current)
+
 - [x] Analyze existing codebase
 - [x] Research ola-map-sdk API surface
 - [x] Research @maplibre/maplibre-react-native v11
@@ -157,6 +167,7 @@ react-native-ola-maps/
 - [x] Nuke old code, keep skeleton
 
 ### Phase 2: Core SDK (Next)
+
 - [x] Implement OlaMapsClient with fetch-based HTTP
 - [x] Implement Places API module
 - [x] Implement Routing API module
@@ -167,6 +178,7 @@ react-native-ola-maps/
 - [x] Full TypeScript types for all APIs
 
 ### Phase 3: React Native Components
+
 - [ ] OlaMapsProvider context
 - [ ] MapView component (wrapping @maplibre/maplibre-react-native)
 - [ ] Marker, Polyline, Polygon components
@@ -174,6 +186,7 @@ react-native-ola-maps/
 - [ ] Callout component
 
 ### Phase 4: Hooks & Integration
+
 - [ ] useOlaMaps hook
 - [ ] useAutocomplete hook
 - [ ] useDirections hook
@@ -181,25 +194,26 @@ react-native-ola-maps/
 - [ ] useGeofencing hook
 
 ### Phase 5: Polish
+
 - [ ] Example app with all features demonstrated
-- [ ] Comprehensive README
-- [ ] API documentation
-- [ ] Unit tests
+- [x] Comprehensive README
+- [x] API documentation
+- [x] Unit tests
 - [ ] Integration tests
 
 ---
 
 ## Map Styles Available
 
-| Category | Styles |
-|----------|--------|
+| Category      | Styles                                                                                                                   |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Default Light | `default-light-lite`, `default-light-standard`, `default-ultra-light-standard`, `default-light-full` + language variants |
-| Default Dark | `default-dark-lite`, `default-dark-standard`, `default-dark-full`, `default-dark-standard-satellite` |
-| Eclipse | `eclipse-light-lite/standard/full`, `eclipse-dark-lite/standard/full` |
-| Bolt | `bolt-light`, `bolt-dark` |
-| Vintage | `vintage-light`, `vintage-dark` |
-| Earth | `default-earth-lite/standard/full` |
-| OSM | `positron`, `osm-bright`, `osm-basic`, `dark-matter`, `fiord-color`, `silver-osm` |
+| Default Dark  | `default-dark-lite`, `default-dark-standard`, `default-dark-full`, `default-dark-standard-satellite`                     |
+| Eclipse       | `eclipse-light-lite/standard/full`, `eclipse-dark-lite/standard/full`                                                    |
+| Bolt          | `bolt-light`, `bolt-dark`                                                                                                |
+| Vintage       | `vintage-light`, `vintage-dark`                                                                                          |
+| Earth         | `default-earth-lite/standard/full`                                                                                       |
+| OSM           | `positron`, `osm-bright`, `osm-basic`, `dark-matter`, `fiord-color`, `silver-osm`                                        |
 
 ---
 

@@ -7,9 +7,9 @@ export class ElevationApi extends BaseApi {
     lat: number,
     lng: number
   ): Promise<ApiResponse<ElevationResult>> {
-    return this.request('/elevation/v1/', {
+    return this.request('/places/v1/elevation', {
       params: {
-        locations: `${lat},${lng}`,
+        location: `${lat},${lng}`,
       },
     });
   }
@@ -17,11 +17,11 @@ export class ElevationApi extends BaseApi {
   async getMultiElevation(
     points: Array<{ lat: number; lng: number }>
   ): Promise<ApiResponse<MultiElevationResult>> {
-    const locations = points
-      .map((p) => `${p.lat},${p.lng}`)
-      .join('|');
-    return this.request('/elevation/v1/', {
-      params: { locations },
+    return this.request('/places/v1/elevation', {
+      method: 'POST',
+      body: {
+        locations: points.map((p) => `${p.lat},${p.lng}`),
+      },
     });
   }
 }

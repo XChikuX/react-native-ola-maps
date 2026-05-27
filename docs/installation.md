@@ -1,60 +1,26 @@
 # Installation
 
-Install the library from npm:
-
 ```sh
-$ npm install react-native-ola-maps
+npm install react-native-ola-maps @maplibre/maplibre-react-native
 ```
 
-One has to use [Ola Maps](https://maps.olakrutrim.com/), which in turn requires you to obtain an [API Key](https://maps.olakrutrim.com/docs/auth)
+Map components are powered by `@maplibre/maplibre-react-native` v11. Follow the MapLibre React Native installation steps for your app, including Expo config plugin setup if applicable.
 
-## Android
+## Requirements
 
-### Specify your Ola Maps API key
+- React `>=19.1.0`
+- React Native `>=0.80.0`
+- React Native New Architecture enabled
+- Ola Maps API key
 
-Add your API key to your manifest file (`android/app/src/main/AndroidManifest.xml`):
+## API key
 
-```xml
-<application>
-   <!-- You will only need to add this meta-data tag, but make sure it's a child of application -->
-   <meta-data
-        android:name="com.ola.mapsdk.API_KEY"
-        android:value="Your Ola maps API Key Here" />
-</application>
+Pass your key to the client or provider:
+
+```tsx
+<OlaMapsProvider apiKey="YOUR_OLA_MAPS_API_KEY">
+  <App />
+</OlaMapsProvider>
 ```
 
----
-
-## iOS
-
-After installing the npm package, we need to install the pod.
-
-```sh
-$ cd ios && pod install
-```
-
-### Enabling Ola Maps
-Add your API key and Project ID to your Info.plist file (`ios/<ProjectName>/Info.plist`)
-
-```xml
-<plist version="1.0">
-        <dict>
-                <key>OlaMapAPIKey</key>
-	        <string>YOUR OLA MAP API KEY HERE HERE</string>
-	        <key>OlaMapProjectId</key>
-	        <string>YOUR OLA MAP PROJECT ID HERE</string>
-        </dict>
-</plist>
-```
-
-### Pod Installation
-
-```ruby
-  target 'OlaMapsExampleTests' do
-    inherit! :complete
-    # Add the following pod to access ola maps pod
-    pod 'OlaMaps', :git => 'https://github.com/wadhia-yash/ola-maps-pods.git'
-  end
-```
-
-You've made it 👍. More things are coming into the picture
+No native Ola Maps SDK API key entries are required because this package uses Ola REST APIs and MapLibre rendering.

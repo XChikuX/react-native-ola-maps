@@ -7,47 +7,45 @@ import type {
 } from '../types/roads';
 import type { ApiResponse } from '../types/common';
 
+type TravelMode = 'DRIVING' | 'WALKING' | 'BICYCLING' | 'TRANSIT' | string;
+type SnapStrategy = 'snaptoroad' | 'nearestroad';
+
+const serializePoints = (points: SnapToRoadPoint[]) =>
+  points.map((p) => `${p.latitude},${p.longitude}`).join('|');
+
 export class RoadsApi extends BaseApi {
   async snapToRoad(
     points: SnapToRoadPoint[],
-    interpolate?: boolean
+    enhancePath?: boolean
   ): Promise<ApiResponse<SnapToRoadResult>> {
-    const path = points
-      .map((p) => `${p.latitude},${p.longitude}`)
-      .join('|');
     return this.request('/routing/v1/snapToRoad', {
       params: {
-        points: path,
-        interpolate: interpolate?.toString(),
+        points: serializePoints(points),
+        enhancePath,
       },
     });
   }
 
   async nearestRoads(
     points: SnapToRoadPoint[],
-    mode?: string,
+    mode?: TravelMode,
     radius?: number
   ): Promise<ApiResponse<NearestRoadsResult>> {
-    const path = points
-      .map((p) => `${p.latitude},${p.longitude}`)
-      .join('|');
     return this.request('/routing/v1/nearestRoads', {
       params: {
-        points: path,
+        points: serializePoints(points),
         mode,
-        radius: radius?.toString(),
+        radius,
       },
     });
   }
 
   async speedLimits(
-    points: SnapToRoadPoint[]
+    points: SnapToRoadPoint[],
+    snapStrategy?: SnapStrategy
   ): Promise<ApiResponse<SpeedLimitsResult>> {
-    const path = points
-      .map((p) => `${p.latitude},${p.longitude}`)
-      .join('|');
     return this.request('/routing/v1/speedLimits', {
-      params: { points: path },
+      params: { points: serializePoints(points), snapStrategy },
     });
   }
 }

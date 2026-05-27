@@ -10,7 +10,8 @@ import type {
   TextSearchOptions,
   TextSearchResult,
 } from '../types/places';
-import type { ApiResponse, Language } from '../types/common';
+import type { ApiResponse, Language, LatLngLiteral } from '../types/common';
+import { toLatLngString } from '../types/common';
 
 export class PlacesApi extends BaseApi {
   async autocomplete(
@@ -21,21 +22,23 @@ export class PlacesApi extends BaseApi {
       params: {
         input,
         location: options?.location
-          ? `${options.location.latitude},${options.location.longitude}`
+          ? toLatLngString(options.location)
           : undefined,
-        radius: options?.radius?.toString(),
-        strictbounds: options?.strictbounds?.toString(),
+        radius: options?.radius,
+        strictbounds: options?.strictbounds,
         language: options?.language,
+        types: options?.types,
       },
     });
   }
 
   async geocode(
     address: string,
-    language?: Language
+    language?: Language,
+    bounds?: string
   ): Promise<ApiResponse<GeocodeResult[]>> {
     return this.request('/places/v1/geocode', {
-      params: { address, language },
+      params: { address, language, bounds },
     });
   }
 
@@ -71,31 +74,39 @@ export class PlacesApi extends BaseApi {
   }
 
   async nearbySearch(
-    location: { lat: number; lng: number },
+    location: LatLngLiteral,
     options?: NearbySearchOptions
   ): Promise<ApiResponse<NearbySearchResult[]>> {
     return this.request('/places/v1/nearbysearch', {
       params: {
-        location: `${location.lat},${location.lng}`,
-        radius: options?.radius?.toString(),
+        location: toLatLngString(location),
+        radius: options?.radius,
         types: options?.types,
-        rankby: options?.rankby,
+        rankBy: options?.rankBy ?? options?.rankby,
         language: options?.language,
+        limit: options?.limit,
+        layers: options?.layers,
+        strictbounds: options?.strictbounds,
+        withCentroid: options?.withCentroid,
       },
     });
   }
 
   async nearbySearchAdvanced(
-    location: { lat: number; lng: number },
+    location: LatLngLiteral,
     options?: NearbySearchOptions
   ): Promise<ApiResponse<NearbySearchResult[]>> {
     return this.request('/places/v1/nearbysearch/advanced', {
       params: {
-        location: `${location.lat},${location.lng}`,
-        radius: options?.radius?.toString(),
+        location: toLatLngString(location),
+        radius: options?.radius,
         types: options?.types,
-        rankby: options?.rankby,
+        rankBy: options?.rankBy ?? options?.rankby,
         language: options?.language,
+        limit: options?.limit,
+        layers: options?.layers,
+        strictbounds: options?.strictbounds,
+        withCentroid: options?.withCentroid,
       },
     });
   }
@@ -108,10 +119,12 @@ export class PlacesApi extends BaseApi {
       params: {
         input,
         location: options?.location
-          ? `${options.location.latitude},${options.location.longitude}`
+          ? toLatLngString(options.location)
           : undefined,
-        radius: options?.radius?.toString(),
+        radius: options?.radius,
         language: options?.language,
+        types: options?.types,
+        size: options?.size,
       },
     });
   }
@@ -119,19 +132,19 @@ export class PlacesApi extends BaseApi {
   async addressValidation(
     address: string
   ): Promise<ApiResponse<GeocodeResult>> {
-    return this.request('/places/v1/address-validation', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address }),
+    return this.request('/places/v1/addressvalidation', {
+      params: { address },
     });
   }
 
   async photo(photoReference: string): Promise<Blob> {
-    const url = new URL('/places/v1/photo', this.baseUrl);
-    url.searchParams.set('api_key', this.apiKey);
-    url.searchParams.set('photo_reference', photoReference);
+    const url = this.buildUrl('/places/v1/photo', {
+      photo_reference: photoReference,
+    });
 
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      headers: { 'X-OlaMaps-RN-SDK-Version': '0.2.0' },
+    });
     if (!response.ok) {
       throw new Error(
         `OlaMaps API error (${response.status}): Failed to fetch photo`

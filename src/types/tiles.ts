@@ -25,7 +25,8 @@ export type MapStyle =
   | 'osm-basic'
   | 'dark-matter'
   | 'fiord-color'
-  | 'silver-osm';
+  | 'silver-osm'
+  | string;
 
 export type MapOptions = {
   style?: MapStyle;
@@ -34,6 +35,19 @@ export type MapOptions = {
   bearing?: number;
   pitch?: number;
 };
+
+export type StaticMapOptions = {
+  style?: MapStyle;
+  width: number;
+  height: number;
+  format?: 'png' | 'jpg';
+  markers?: string[];
+  paths?: string[];
+} & (
+  | { center: [longitude: number, latitude: number]; zoom: number }
+  | { bbox: [minX: number, minY: number, maxX: number, maxY: number] }
+  | { auto: true }
+);
 
 export type TransformRequest = {
   url: string;

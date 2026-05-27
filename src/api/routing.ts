@@ -12,6 +12,8 @@ import type {
 } from '../types/routing';
 import type { ApiResponse, LatLngString } from '../types/common';
 
+const joinCoordinates = (locations: LatLngString[]) => locations.join('|');
+
 export class RoutingApi extends BaseApi {
   async getDirections(
     origin: LatLngString,
@@ -19,14 +21,18 @@ export class RoutingApi extends BaseApi {
     options?: DirectionsOptions
   ): Promise<ApiResponse<DirectionsResult>> {
     return this.request('/routing/v1/directions', {
+      method: 'POST',
       params: {
         origin,
         destination,
-        alternatives: options?.alternatives?.toString(),
-        steps: options?.steps?.toString(),
+        alternatives: options?.alternatives,
+        steps: options?.steps,
         overview: options?.overview,
         language: options?.language,
-        traffic_metadata: options?.traffic_metadata?.toString(),
+        traffic_metadata: options?.traffic_metadata,
+        waypoints: options?.waypoints?.join('|'),
+        mode: options?.mode,
+        route_preference: options?.route_preference,
       },
     });
   }
@@ -37,13 +43,17 @@ export class RoutingApi extends BaseApi {
     options?: Omit<DirectionsOptions, 'traffic_metadata'>
   ): Promise<ApiResponse<DirectionsResult>> {
     return this.request('/routing/v1/directions/basic', {
+      method: 'POST',
       params: {
         origin,
         destination,
-        alternatives: options?.alternatives?.toString(),
-        steps: options?.steps?.toString(),
+        alternatives: options?.alternatives,
+        steps: options?.steps,
         overview: options?.overview,
         language: options?.language,
+        waypoints: options?.waypoints?.join('|'),
+        mode: options?.mode,
+        route_preference: options?.route_preference,
       },
     });
   }
@@ -55,10 +65,11 @@ export class RoutingApi extends BaseApi {
   ): Promise<ApiResponse<DistanceMatrixResult>> {
     return this.request('/routing/v1/distanceMatrix', {
       params: {
-        origins: origins.join('|'),
-        destinations: destinations.join('|'),
+        origins: joinCoordinates(origins),
+        destinations: joinCoordinates(destinations),
         mode: options?.mode,
         language: options?.language,
+        route_preference: options?.route_preference,
       },
     });
   }
@@ -70,10 +81,11 @@ export class RoutingApi extends BaseApi {
   ): Promise<ApiResponse<DistanceMatrixResult>> {
     return this.request('/routing/v1/distanceMatrix/basic', {
       params: {
-        origins: origins.join('|'),
-        destinations: destinations.join('|'),
+        origins: joinCoordinates(origins),
+        destinations: joinCoordinates(destinations),
         mode: options?.mode,
         language: options?.language,
+        route_preference: options?.route_preference,
       },
     });
   }
@@ -83,11 +95,18 @@ export class RoutingApi extends BaseApi {
     options?: RouteOptimizerOptions
   ): Promise<ApiResponse<RouteOptimizerResult>> {
     return this.request('/routing/v1/routeOptimizer', {
+      method: 'POST',
       params: {
-        coordinates: locations.join(';'),
+        locations: joinCoordinates(locations),
         source: options?.source,
         destination: options?.destination,
-        roundtrip: options?.roundtrip?.toString(),
+        round_trip: options?.roundTrip ?? options?.roundtrip,
+        mode: options?.mode,
+        steps: options?.steps,
+        overview: options?.overview,
+        language: options?.language,
+        traffic_metadata: options?.traffic_metadata,
+        route_preference: options?.route_preference,
       },
     });
   }
@@ -96,10 +115,14 @@ export class RoutingApi extends BaseApi {
     inputData: FleetPlannerInput,
     strategy: FleetPlannerStrategy
   ): Promise<ApiResponse<FleetPlannerResult>> {
+    const formData = new FormData();
+    formData.append('input', JSON.stringify(inputData));
+
     return this.request('/routing/v1/fleetPlanner', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...inputData, strategy }),
+      params: { strategy },
+      body: formData,
+      skipJsonSerialization: true,
     });
   }
 }

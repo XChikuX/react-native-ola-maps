@@ -1,8 +1,9 @@
-export { OlaMapsClient } from './OlaMapsClient';
-export { PlacesApi } from './api/places';
-export { RoutingApi } from './api/routing';
-export { RoadsApi } from './api/roads';
-export { GeofencingApi } from './api/geofencing';
-export { ElevationApi } from './api/elevation';
-export { TilesApi } from './api/tiles';
+export { default, OlaMapsClient } from './OlaMapsClient';
+export { VERSION } from './version';
+export { OlaMapsError } from './errors';
+export type { OlaMapsErrorCode } from './errors';
+export * from './api';
+export * from './providers';
+export * from './hooks';
+export * from './components';
 export * from './types';

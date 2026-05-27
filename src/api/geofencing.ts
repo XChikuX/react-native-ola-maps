@@ -7,9 +7,7 @@ import type {
 import type { ApiResponse, PaginatedResponse } from '../types/common';
 
 export class GeofencingApi extends BaseApi {
-  async create(
-    geofenceData: GeofenceData
-  ): Promise<ApiResponse<Geofence>> {
+  async create(geofenceData: GeofenceData): Promise<ApiResponse<Geofence>> {
     return this.request('/geofencing/v1/fences', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -5,6 +5,7 @@ export type AutocompleteOptions = {
   radius?: number;
   strictbounds?: boolean;
   language?: Language;
+  types?: string;
 };
 
 export type AutocompleteResult = {
@@ -78,8 +79,13 @@ export type PlaceDetails = {
 export type NearbySearchOptions = {
   radius?: number;
   types?: string;
+  rankBy?: 'prominence' | 'distance';
   rankby?: 'prominence' | 'distance';
   language?: Language;
+  limit?: number;
+  layers?: string;
+  strictbounds?: boolean;
+  withCentroid?: boolean;
 };
 
 export type NearbySearchResult = {
@@ -97,6 +103,8 @@ export type TextSearchOptions = {
   location?: LatLng;
   radius?: number;
   language?: Language;
+  types?: string;
+  size?: number;
 };
 
 export type TextSearchResult = NearbySearchResult;

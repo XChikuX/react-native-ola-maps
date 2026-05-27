@@ -6,6 +6,9 @@ export type DirectionsOptions = {
   overview?: 'full' | 'simplified' | 'false';
   language?: string;
   traffic_metadata?: boolean;
+  waypoints?: LatLngString[];
+  mode?: 'driving' | 'walking' | 'bicycling' | 'transit';
+  route_preference?: 'shortest' | 'fastest' | 'eco' | string;
 };
 
 export type RouteStep = {
@@ -50,6 +53,7 @@ export type DirectionsResult = {
 export type DistanceMatrixOptions = {
   mode?: 'driving' | 'walking' | 'bicycling';
   language?: string;
+  route_preference?: 'shortest' | 'fastest' | 'eco' | string;
 };
 
 export type DistanceMatrixElement = {
@@ -69,7 +73,14 @@ export type DistanceMatrixResult = {
 export type RouteOptimizerOptions = {
   source?: 'first' | 'last' | 'any';
   destination?: 'first' | 'last' | 'any';
+  roundTrip?: boolean;
   roundtrip?: boolean;
+  mode?: 'driving' | 'walking' | 'bicycling' | 'transit';
+  steps?: boolean;
+  overview?: 'full' | 'simplified' | 'false';
+  language?: string;
+  traffic_metadata?: boolean;
+  route_preference?: 'shortest' | 'fastest' | 'eco' | string;
 };
 
 export type RouteOptimizerResult = {

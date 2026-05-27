@@ -4,9 +4,13 @@ import { RoadsApi } from './api/roads';
 import { GeofencingApi } from './api/geofencing';
 import { ElevationApi } from './api/elevation';
 import { TilesApi } from './api/tiles';
+import { OlaMapsError } from './errors';
+import { VERSION } from './version';
 import type { OlaMapsConfig } from './types/common';
 
 export class OlaMapsClient {
+  static readonly VERSION = VERSION;
+
   public readonly places: PlacesApi;
   public readonly routing: RoutingApi;
   public readonly roads: RoadsApi;
@@ -14,9 +18,12 @@ export class OlaMapsClient {
   public readonly elevation: ElevationApi;
   public readonly tiles: TilesApi;
 
-  constructor(config: OlaMapsConfig) {
+  constructor(public readonly config: OlaMapsConfig) {
     if (!config.apiKey) {
-      throw new Error('OlaMaps: apiKey is required');
+      throw new OlaMapsError(
+        'OlaMaps: apiKey is required',
+        'CONFIGURATION_ERROR'
+      );
     }
 
     this.places = new PlacesApi(config);
@@ -27,3 +34,5 @@ export class OlaMapsClient {
     this.tiles = new TilesApi(config);
   }
 }
+
+export default OlaMapsClient;

@@ -3,6 +3,13 @@ export type LatLng = {
   longitude: number;
 };
 
+export type LngLat = [longitude: number, latitude: number];
+
+export type LatLngLiteral = {
+  lat: number;
+  lng: number;
+};
+
 export type LatLngString = `${number},${number}`;
 
 export type Language = 'en' | 'hi' | string;
@@ -22,4 +29,33 @@ export type PaginatedResponse<T> = ApiResponse<T> & {
 export type OlaMapsConfig = {
   apiKey: string;
   baseUrl?: string;
+};
+
+export const toLatLngString = (
+  location: LatLng | LatLngLiteral | LatLngString
+): LatLngString => {
+  if (typeof location === 'string') {
+    return location;
+  }
+
+  if ('latitude' in location) {
+    return `${location.latitude},${location.longitude}`;
+  }
+
+  return `${location.lat},${location.lng}`;
+};
+
+export const toLngLat = (
+  location: LatLng | LatLngLiteral | LatLngString
+): LngLat => {
+  if (typeof location === 'string') {
+    const [lat, lng] = location.split(',').map(Number);
+    return [lng ?? 0, lat ?? 0];
+  }
+
+  if ('latitude' in location) {
+    return [location.longitude, location.latitude];
+  }
+
+  return [location.lng, location.lat];
 };

@@ -3,6 +3,7 @@
 ## Project Overview
 
 `react-native-ola-maps` is a React Native SDK for Ola Maps. It provides:
+
 1. A TypeScript API client with full fidelity to `ola-map-sdk` npm package
 2. React Native map components powered by `@maplibre/maplibre-react-native` v11
 3. React hooks for common map operations
@@ -26,7 +27,7 @@ bun run lint
 bun run typecheck
 
 # Run example app
-cd example && bun start
+# Example app will be added in a later phase.
 ```
 
 ## Architecture
@@ -50,13 +51,13 @@ cd example && bun start
 
 ## Key APIs
 
-| Endpoint | Base Path |
-|----------|-----------|
-| Places | `/places/v1/` |
-| Routing | `/routing/v1/` |
-| Geofencing | `/geofencing/v1/` |
-| Elevation | `/elevation/v1/` |
-| Tiles | `/tiles/vector/v1/` |
+| Endpoint   | Base Path              |
+| ---------- | ---------------------- |
+| Places     | `/places/v1/`          |
+| Routing    | `/routing/v1/`         |
+| Geofencing | `/geofencing/v1/`      |
+| Elevation  | `/places/v1/elevation` |
+| Tiles      | `/tiles/vector/v1/`    |
 
 ## Style Guide
 
