@@ -2,14 +2,22 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "react-native-ola-maps": ["./src/index"]
+      "react-native-ola-maps": [
+        "./src/index"
+      ],
+      "react-native-india-maps": [
+        "./src/index"
+      ]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
-    "lib": ["ESNext"],
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "noEmit": true,
@@ -25,5 +33,9 @@
     "strict": true,
     "target": "ESNext",
     "verbatimModuleSyntax": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "lib"
+  ]
 }

@@ -1,60 +1,61 @@
 # Installation
 
-Install the library from npm:
-
 ```sh
-$ npm install react-native-ola-maps
+bun add react-native-india-maps @maplibre/maplibre-react-native@^11.0.0
 ```
 
-One has to use [Ola Maps](https://maps.olakrutrim.com/), which in turn requires you to obtain an [API Key](https://maps.olakrutrim.com/docs/auth)
+## Requirements
 
-## Android
+- React `>=19.1.0`
+- React Native `>=0.80.0`
+- `@maplibre/maplibre-react-native` `>=11.0.0`
+- Expo development build or bare React Native app
+- React Native New Architecture enabled
+- Ola Maps API key or Mappls access token
 
-### Specify your Ola Maps API key
+## Expo plugin
 
-Add your API key to your manifest file (`android/app/src/main/AndroidManifest.xml`):
-
-```xml
-<application>
-   <!-- You will only need to add this meta-data tag, but make sure it's a child of application -->
-   <meta-data
-        android:name="com.ola.mapsdk.API_KEY"
-        android:value="Your Ola maps API Key Here" />
-</application>
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "react-native-india-maps",
+        {
+          "iosWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location while using the app.",
+          "backgroundLocation": false
+        }
+      ]
+    ]
+  }
+}
 ```
 
----
+The plugin handles:
+- Android: `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION` permissions (+ `ACCESS_BACKGROUND_LOCATION` if `backgroundLocation: true`)
+- iOS: `NSLocationWhenInUseUsageDescription` (+ `NSLocationAlwaysAndWhenInUseUsageDescription` if `backgroundLocation: true`)
 
-## iOS
+No native SDK configuration files, Maven repositories, or Gradle plugins are needed — MapLibre handles all rendering natively.
 
-After installing the npm package, we need to install the pod.
+## Provider
 
-```sh
-$ cd ios && pod install
+```tsx
+import { IndiaMapsProvider, IndiaMapsClient } from 'react-native-india-maps';
+
+// Ola Maps (default)
+const client = new IndiaMapsClient({ apiKey: 'YOUR_OLA_MAPS_API_KEY' });
+
+// Or Mappls
+// const client = new IndiaMapsClient({ accessToken: 'YOUR_MAPPLS_TOKEN', provider: 'mappls' });
+
+<IndiaMapsProvider client={client}>
+  <App />
+</IndiaMapsProvider>;
 ```
 
-### Enabling Ola Maps
-Add your API key and Project ID to your Info.plist file (`ios/<ProjectName>/Info.plist`)
+## Important
 
-```xml
-<plist version="1.0">
-        <dict>
-                <key>OlaMapAPIKey</key>
-	        <string>YOUR OLA MAP API KEY HERE HERE</string>
-	        <key>OlaMapProjectId</key>
-	        <string>YOUR OLA MAP PROJECT ID HERE</string>
-        </dict>
-</plist>
-```
-
-### Pod Installation
-
-```ruby
-  target 'OlaMapsExampleTests' do
-    inherit! :complete
-    # Add the following pod to access ola maps pod
-    pod 'OlaMaps', :git => 'https://github.com/wadhia-yash/ola-maps-pods.git'
-  end
-```
-
-You've made it 👍. More things are coming into the picture
+- Expo Go is not supported — MapLibre requires native rendering
+- MapLibre v11 only supports the React Native New Architecture
+- No `.conf` or `.olf` files are needed (those were Mappls native SDK artifacts)
+- The map rendering is fully handled by `@maplibre/maplibre-react-native`
