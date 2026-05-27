@@ -42,6 +42,7 @@ export const MapView = forwardRef<MapRef, IndiaMapViewProps>(
       initialRegion,
       cameraProps,
       children,
+      onMapReady,
       ...mapProps
     },
     ref

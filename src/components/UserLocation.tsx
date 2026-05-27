@@ -1,8 +1,8 @@
 import {
   NativeUserLocation as MapLibreNativeUserLocation,
   UserLocation as MapLibreUserLocation,
-  type GeolocationPosition,
 } from '@maplibre/maplibre-react-native';
+export type { GeolocationPosition } from '@maplibre/maplibre-react-native';
 
 export function UserLocation(props: Record<string, unknown>) {
   return <MapLibreUserLocation {...props} />;
