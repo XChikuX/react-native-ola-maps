@@ -1,5 +1,5 @@
-import { useOlaMaps } from './useOlaMaps';
+import { useIndiaMaps } from './useIndiaMaps';
 
 export function useGeofencing() {
-  return useOlaMaps().geofencing;
+  return useIndiaMaps().geofencing;
 }

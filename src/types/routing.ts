@@ -7,123 +7,52 @@ export type DirectionsOptions = {
   language?: string;
   traffic_metadata?: boolean;
   waypoints?: LatLngString[];
-  mode?: 'driving' | 'walking' | 'bicycling' | 'transit';
+  mode?: 'driving' | 'walking' | 'bicycling' | 'trucking' | string;
   route_preference?: 'shortest' | 'fastest' | 'eco' | string;
+  resource?: 'route' | 'route_eta' | 'route_traffic' | string;
+  geometries?: 'polyline' | 'polyline6' | 'geojson' | string;
 };
 
-export type RouteStep = {
-  distance: number;
-  duration: number;
-  geometry: string;
-  name: string;
-  mode: string;
-  maneuver: {
-    location: [number, number];
-    type: string;
-    modifier?: string;
-    instruction: string;
-  };
-};
+export type RouteStep = Record<string, unknown>;
+export type RouteLeg = Record<string, unknown>;
+export type Route = Record<string, unknown>;
 
-export type RouteLeg = {
-  distance: number;
-  duration: number;
-  steps: RouteStep[];
-  summary: string;
-};
-
-export type Route = {
-  distance: number;
-  duration: number;
-  geometry: string;
-  legs: RouteLeg[];
-  overview_polyline?: string;
-  weight: number;
-  weight_name: string;
-};
-
-export type DirectionsResult = {
-  routes: Route[];
-  waypoints: Array<{
-    location: [number, number];
-    name: string;
-  }>;
-};
+export type DirectionsResult = Record<string, unknown>;
 
 export type DistanceMatrixOptions = {
-  mode?: 'driving' | 'walking' | 'bicycling';
+  mode?: 'driving' | 'walking' | 'bicycling' | string;
   language?: string;
   route_preference?: 'shortest' | 'fastest' | 'eco' | string;
+  resource?:
+    | 'distance_matrix'
+    | 'distance_matrix_eta'
+    | 'distance_matrix_traffic'
+    | string;
 };
 
-export type DistanceMatrixElement = {
-  distance: { value: number; text: string };
-  duration: { value: number; text: string };
-  status: string;
-};
-
-export type DistanceMatrixResult = {
-  origin_addresses: string[];
-  destination_addresses: string[];
-  rows: Array<{
-    elements: DistanceMatrixElement[];
-  }>;
-};
+export type DistanceMatrixElement = Record<string, unknown>;
+export type DistanceMatrixResult = Record<string, unknown>;
 
 export type RouteOptimizerOptions = {
   source?: 'first' | 'last' | 'any';
   destination?: 'first' | 'last' | 'any';
   roundTrip?: boolean;
   roundtrip?: boolean;
-  mode?: 'driving' | 'walking' | 'bicycling' | 'transit';
+  mode?: 'driving' | 'walking' | 'bicycling' | string;
   steps?: boolean;
   overview?: 'full' | 'simplified' | 'false';
   language?: string;
   traffic_metadata?: boolean;
   route_preference?: 'shortest' | 'fastest' | 'eco' | string;
+  resource?:
+    | 'trip_optimization'
+    | 'trip_optimization_eta'
+    | 'trip_optimization_traffic'
+    | string;
 };
 
-export type RouteOptimizerResult = {
-  trips: Route[];
-  waypoints: Array<{
-    waypoint_index: number;
-    trips_index: number;
-    location: [number, number];
-    name: string;
-  }>;
-};
+export type RouteOptimizerResult = Record<string, unknown>;
 
 export type FleetPlannerStrategy = 'cost' | 'time' | 'distance';
-
-export type FleetPlannerInput = {
-  vehicles: Array<{
-    id: string;
-    start: LatLngString;
-    end?: LatLngString;
-    capacity?: number[];
-  }>;
-  jobs: Array<{
-    id: string;
-    location: LatLngString;
-    delivery?: number[];
-    pickup?: number[];
-    service?: number;
-  }>;
-};
-
-export type FleetPlannerResult = {
-  routes: Array<{
-    vehicle: string;
-    steps: Array<{
-      type: string;
-      job?: string;
-      location: [number, number];
-      arrival: number;
-      duration: number;
-    }>;
-    cost: number;
-    duration: number;
-    distance: number;
-  }>;
-  unassigned: Array<{ id: string; reason: string }>;
-};
+export type FleetPlannerInput = Record<string, unknown>;
+export type FleetPlannerResult = Record<string, unknown>;

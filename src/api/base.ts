@@ -1,8 +1,7 @@
-import { OlaMapsError } from '../errors';
+import { IndiaMapsError } from '../errors';
 import { VERSION } from '../version';
-import type { OlaMapsConfig } from '../types/common';
-
-const DEFAULT_BASE_URL = 'https://api.olamaps.io';
+import type { IndiaMapsConfig } from '../types/common';
+import { resolveAccessToken } from '../types/common';
 
 type ParamValue = string | number | boolean | undefined | null;
 
@@ -12,25 +11,49 @@ export type RequestOptions = Omit<RequestInit, 'body'> & {
   skipJsonSerialization?: boolean;
 };
 
-export class BaseApi {
-  protected readonly apiKey: string;
-  protected readonly baseUrl: string;
+const DEFAULT_SEARCH_BASE_URL = 'https://search.mappls.com';
+const DEFAULT_ROUTE_BASE_URL = 'https://route.mappls.com';
+const DEFAULT_SDK_BASE_URL = 'https://sdk.mappls.com';
+const DEFAULT_TILE_BASE_URL = 'https://tile.mappls.com';
 
-  constructor(config: OlaMapsConfig) {
-    if (!config.apiKey) {
-      throw new OlaMapsError(
-        'OlaMaps: apiKey is required',
+export class BaseApi {
+  protected readonly accessToken?: string;
+  protected readonly searchBaseUrl: string;
+  protected readonly routeBaseUrl: string;
+  protected readonly sdkBaseUrl: string;
+  protected readonly tileBaseUrl: string;
+
+  constructor(config: IndiaMapsConfig) {
+    this.accessToken = resolveAccessToken(config);
+    this.searchBaseUrl = config.searchBaseUrl ?? DEFAULT_SEARCH_BASE_URL;
+    this.routeBaseUrl = config.routeBaseUrl ?? DEFAULT_ROUTE_BASE_URL;
+    this.sdkBaseUrl = config.sdkBaseUrl ?? DEFAULT_SDK_BASE_URL;
+    this.tileBaseUrl = config.tileBaseUrl ?? DEFAULT_TILE_BASE_URL;
+  }
+
+  protected requireAccessToken(feature: string) {
+    if (!this.accessToken) {
+      throw new IndiaMapsError(
+        `${feature} requires accessToken (or apiKey alias) in IndiaMapsClient config.`,
         'CONFIGURATION_ERROR'
       );
     }
-
-    this.apiKey = config.apiKey;
-    this.baseUrl = config.baseUrl ?? DEFAULT_BASE_URL;
+    return this.accessToken;
   }
 
-  protected buildUrl(path: string, params?: Record<string, ParamValue>): URL {
-    const url = new URL(path, this.baseUrl);
-    url.searchParams.set('api_key', this.apiKey);
+  protected buildUrl(
+    path: string,
+    params?: Record<string, ParamValue>,
+    opts?: { baseUrl?: string; includeAccessToken?: boolean }
+  ): URL {
+    const rawUrl = path.startsWith('http')
+      ? path
+      : `${opts?.baseUrl ?? this.searchBaseUrl}${path}`;
+    const url = new URL(rawUrl);
+
+    if (opts?.includeAccessToken !== false && this.accessToken) {
+      url.searchParams.set('access_token', this.accessToken);
+    }
 
     if (params) {
       for (const [key, value] of Object.entries(params)) {
@@ -45,12 +68,13 @@ export class BaseApi {
 
   protected async request<T>(
     path: string,
-    options?: RequestOptions
+    options?: RequestOptions,
+    opts?: { baseUrl?: string; includeAccessToken?: boolean }
   ): Promise<T> {
-    const url = this.buildUrl(path, options?.params);
+    const url = this.buildUrl(path, options?.params, opts);
     const headers = new Headers(options?.headers);
     headers.set('Accept', 'application/json');
-    headers.set('X-OlaMaps-RN-SDK-Version', VERSION);
+    headers.set('X-IndiaMaps-RN-SDK-Version', VERSION);
 
     let body = options?.body;
     if (
@@ -82,8 +106,8 @@ export class BaseApi {
         : await response.text();
 
       if (!response.ok) {
-        throw new OlaMapsError(
-          `OlaMaps API error (${response.status})`,
+        throw new IndiaMapsError(
+          `India Maps API error (${response.status})`,
           'API_ERROR',
           { status: response.status, response: responseBody }
         );
@@ -91,11 +115,11 @@ export class BaseApi {
 
       return responseBody as T;
     } catch (error) {
-      if (error instanceof OlaMapsError) {
+      if (error instanceof IndiaMapsError) {
         throw error;
       }
-      throw new OlaMapsError(
-        error instanceof Error ? error.message : 'OlaMaps network error',
+      throw new IndiaMapsError(
+        error instanceof Error ? error.message : 'India Maps network error',
         'NETWORK_ERROR'
       );
     }

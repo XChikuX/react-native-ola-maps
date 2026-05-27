@@ -6,75 +6,24 @@ export type AutocompleteOptions = {
   strictbounds?: boolean;
   language?: Language;
   types?: string;
+  zoom?: number;
+  hyperLocal?: boolean;
+  filter?: string;
+  pod?: string;
+  tokenizeAddress?: boolean;
 };
 
-export type AutocompleteResult = {
-  reference: string;
-  place_id: string;
-  description: string;
-  matched_substrings: Array<{
-    offset: number;
-    length: number;
-  }>;
-  structured_formatting: {
-    main_text: string;
-    secondary_text: string;
-    main_text_matched_substrings: Array<{
-      offset: number;
-      length: number;
-    }>;
-  };
-  terms: Array<{
-    offset: number;
-    value: string;
-  }>;
-  types: string[];
-  distance_meters?: number;
-  geometry?: {
-    location: {
-      lat: number;
-      lng: number;
-    };
-  };
+export type AutocompleteResult = Record<string, unknown> & {
+  mapplsPin?: string;
+  placeName?: string;
+  placeAddress?: string;
 };
 
-export type GeocodeResult = {
-  formatted_address: string;
-  place_id: string;
-  geometry: {
-    location: {
-      lat: number;
-      lng: number;
-    };
-    viewport: {
-      northeast: { lat: number; lng: number };
-      southwest: { lat: number; lng: number };
-    };
-  };
-  address_components: Array<{
-    long_name: string;
-    short_name: string;
-    types: string[];
-  }>;
-  types: string[];
-};
+export type GeocodeResult = Record<string, unknown>;
 
 export type ReverseGeocodeResult = GeocodeResult;
 
-export type PlaceDetails = {
-  place_id: string;
-  name: string;
-  formatted_address: string;
-  geometry: {
-    location: { lat: number; lng: number };
-  };
-  address_components: Array<{
-    long_name: string;
-    short_name: string;
-    types: string[];
-  }>;
-  types: string[];
-};
+export type PlaceDetails = Record<string, unknown>;
 
 export type NearbySearchOptions = {
   radius?: number;
@@ -86,18 +35,16 @@ export type NearbySearchOptions = {
   layers?: string;
   strictbounds?: boolean;
   withCentroid?: boolean;
+  page?: number;
+  bounds?: string;
+  filter?: string;
+  richData?: boolean;
+  sortBy?: string;
+  userName?: string;
+  keyword?: string;
 };
 
-export type NearbySearchResult = {
-  place_id: string;
-  name: string;
-  geometry: {
-    location: { lat: number; lng: number };
-  };
-  vicinity: string;
-  types: string[];
-  rating?: number;
-};
+export type NearbySearchResult = Record<string, unknown>;
 
 export type TextSearchOptions = {
   location?: LatLng;
@@ -105,6 +52,11 @@ export type TextSearchOptions = {
   language?: Language;
   types?: string;
   size?: number;
+  zoom?: number;
+  hyperLocal?: boolean;
+  filter?: string;
+  pod?: string;
+  tokenizeAddress?: boolean;
 };
 
 export type TextSearchResult = NearbySearchResult;

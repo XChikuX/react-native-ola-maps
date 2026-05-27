@@ -1,5 +1,6 @@
+import type { ComponentType } from 'react';
 import { useMemo } from 'react';
-import { GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
+import { loadMapplsMapSdk } from '../mappls/loaders';
 import type { LatLng, LatLngLiteral, LngLat } from '../types/common';
 import { toLngLat } from '../types/common';
 
@@ -27,7 +28,7 @@ const closeRing = (coordinates: LngLat[]): LngLat[] => {
 };
 
 export function Polygon({
-  id = 'ola-polygon',
+  id = 'india-polygon',
   coordinates,
   fillColor = '#2563eb',
   fillOpacity = 0.25,
@@ -36,6 +37,14 @@ export function Polygon({
   fillLayerProps,
   lineLayerProps,
 }: PolygonProps) {
+  const sdk = loadMapplsMapSdk() as {
+    ShapeSource: ComponentType<Record<string, unknown>>;
+    FillLayer: ComponentType<Record<string, unknown>>;
+    LineLayer: ComponentType<Record<string, unknown>>;
+  };
+  const ShapeSource = sdk.ShapeSource;
+  const FillLayer = sdk.FillLayer;
+  const LineLayer = sdk.LineLayer;
   const ring = useMemo(
     () =>
       closeRing(
@@ -59,21 +68,17 @@ export function Polygon({
   );
 
   return (
-    <GeoJSONSource id={`${id}-source`} data={feature}>
-      <Layer
+    <ShapeSource id={`${id}-source`} shape={feature}>
+      <FillLayer
         id={`${id}-fill`}
-        type="fill"
-        source={`${id}-source`}
-        paint={{ 'fill-color': fillColor, 'fill-opacity': fillOpacity }}
-        {...(fillLayerProps as object)}
+        style={{ fillColor, fillOpacity }}
+        {...fillLayerProps}
       />
-      <Layer
+      <LineLayer
         id={`${id}-stroke`}
-        type="line"
-        source={`${id}-source`}
-        paint={{ 'line-color': strokeColor, 'line-width': strokeWidth }}
-        {...(lineLayerProps as object)}
+        style={{ lineColor: strokeColor, lineWidth: strokeWidth }}
+        {...lineLayerProps}
       />
-    </GeoJSONSource>
+    </ShapeSource>
   );
 }

@@ -1,42 +1,35 @@
-import { forwardRef, useContext, useEffect, useMemo } from 'react';
-import {
-  Camera,
-  Map,
-  TransformRequestManager,
-  type CameraProps,
-  type MapProps,
-  type MapRef,
-  type StyleSpecification,
-} from '@maplibre/maplibre-react-native';
-import { OlaMapsClient } from '../OlaMapsClient';
-import { OlaMapsContext } from '../providers/OlaMapsProvider';
+import { forwardRef, useContext, useMemo } from 'react';
+import type { ComponentType, ReactNode } from 'react';
+import { IndiaMapsClient } from '../IndiaMapsClient';
+import { loadMapplsMapSdk } from '../mappls/loaders';
+import { IndiaMapsContext } from '../providers/IndiaMapsProvider';
 import type { LatLng, LngLat } from '../types/common';
 import { toLngLat } from '../types/common';
 import type { MapStyle } from '../types/tiles';
 
 export type InitialRegion = LatLng & {
   zoomLevel?: number;
-  altitude?: number;
 };
 
-export type OlaMapViewProps = Omit<MapProps, 'mapStyle'> & {
+export type IndiaMapViewProps = {
+  accessToken?: string;
   apiKey?: string;
-  client?: OlaMapsClient;
+  client?: IndiaMapsClient;
   styleName?: MapStyle;
-  mapStyle?: string | StyleSpecification;
   initialCenter?: LngLat;
   initialZoom?: number;
   initialRegion?: InitialRegion;
-  cameraProps?: Omit<CameraProps, 'initialViewState'>;
+  cameraProps?: Record<string, unknown>;
+  children?: ReactNode;
 };
 
-export const MapView = forwardRef<MapRef, OlaMapViewProps>(
+export const MapView = forwardRef<any, IndiaMapViewProps>(
   (
     {
+      accessToken,
       apiKey,
       client,
       styleName,
-      mapStyle,
       initialCenter,
       initialZoom,
       initialRegion,
@@ -46,53 +39,51 @@ export const MapView = forwardRef<MapRef, OlaMapViewProps>(
     },
     ref
   ) => {
-    const context = useContext(OlaMapsContext);
-    const resolvedApiKey = apiKey ?? context?.apiKey;
+    const sdk = loadMapplsMapSdk() as {
+      MapView: ComponentType<Record<string, unknown>>;
+      Camera?: ComponentType<Record<string, unknown>>;
+    };
+    const NativeMapView = sdk.MapView;
+    const NativeCamera = sdk.Camera;
+    const context = useContext(IndiaMapsContext);
     const resolvedClient = useMemo(() => {
-      if (client) {
+      if (client instanceof IndiaMapsClient) {
         return client;
       }
-      if (context?.client) {
+
+      if (context?.client instanceof IndiaMapsClient) {
         return context.client;
       }
-      if (resolvedApiKey) {
-        return new OlaMapsClient({ apiKey: resolvedApiKey });
-      }
-      return undefined;
-    }, [client, context?.client, resolvedApiKey]);
 
-    if (!resolvedClient || !resolvedApiKey) {
-      throw new Error(
-        'MapView requires an apiKey prop or an OlaMapsProvider ancestor'
-      );
-    }
-
-    const resolvedMapStyle =
-      mapStyle ?? resolvedClient.tiles.getStyleURL(styleName);
-    const center =
-      initialCenter ?? (initialRegion ? toLngLat(initialRegion) : undefined);
-    const zoom = initialZoom ?? initialRegion?.zoomLevel;
-
-    useEffect(() => {
-      const transformId = `ola-maps-api-key-${resolvedApiKey}`;
-      TransformRequestManager.addUrlSearchParam({
-        id: transformId,
-        match: /api\.olamaps\.io/,
-        name: 'api_key',
-        value: resolvedApiKey,
+      return new IndiaMapsClient({
+        accessToken,
+        apiKey,
       });
-      return () => TransformRequestManager.removeUrlSearchParam(transformId);
-    }, [resolvedApiKey]);
+    }, [accessToken, apiKey, client, context?.client]);
+
+    const centerCoordinate =
+      initialCenter ?? (initialRegion ? toLngLat(initialRegion) : undefined);
+    const zoomLevel = initialZoom ?? initialRegion?.zoomLevel ?? 12;
+    const mapplsStyle = resolvedClient.tiles.getStyleName(styleName);
 
     return (
-      <Map ref={ref} mapStyle={resolvedMapStyle} {...mapProps}>
-        {(center || zoom != null || cameraProps) && (
-          <Camera initialViewState={{ center, zoom }} {...cameraProps} />
-        )}
+      <NativeMapView
+        ref={ref}
+        mapplsStyle={mapplsStyle}
+        {...(mapProps as Record<string, unknown>)}
+      >
+        {NativeCamera ? (
+          <NativeCamera
+            centerCoordinate={centerCoordinate}
+            zoomLevel={zoomLevel}
+            {...(cameraProps ?? {})}
+          />
+        ) : null}
         {children}
-      </Map>
+      </NativeMapView>
     );
   }
 );
 
 MapView.displayName = 'MapView';
+export type OlaMapViewProps = IndiaMapViewProps;

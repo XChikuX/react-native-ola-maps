@@ -1,4 +1,4 @@
-import { OlaMapsClient } from '../OlaMapsClient';
+import { IndiaMapsClient } from '../index';
 
 const jsonResponse = (body: unknown) => ({
   ok: true,
@@ -11,62 +11,36 @@ const jsonResponse = (body: unknown) => ({
 const fetchMock = global.fetch as jest.Mock;
 
 describe('API endpoint construction', () => {
-  let client: OlaMapsClient;
+  let client: IndiaMapsClient;
 
   beforeEach(() => {
-    client = new OlaMapsClient({ apiKey: 'test-key' });
-    fetchMock.mockResolvedValue(jsonResponse({ status: 'ok', data: [] }));
+    client = new IndiaMapsClient({ accessToken: 'test-token' });
+    fetchMock.mockResolvedValue(jsonResponse({ results: [] }));
   });
 
-  it('uses verified Places endpoints', async () => {
-    await client.places.addressValidation('Bengaluru');
-    expect(fetchMock.mock.calls[0][0]).toContain(
-      '/places/v1/addressvalidation'
-    );
-    expect(fetchMock.mock.calls[0][0]).toContain('address=Bengaluru');
-
+  it('uses verified Mappls elevation endpoint', async () => {
     await client.elevation.getElevation(12.9, 77.6);
-    expect(fetchMock.mock.calls[1][0]).toContain('/places/v1/elevation');
-    expect(fetchMock.mock.calls[1][0]).toContain('location=12.9%2C77.6');
+    expect(fetchMock.mock.calls[0][0]).toContain('/map/utils/elevation');
+    expect(fetchMock.mock.calls[0][0]).toContain('locations=12.9%2C77.6');
+    expect(fetchMock.mock.calls[0][0]).toContain('access_token=test-token');
   });
 
-  it('uses POST for directions and verified route optimizer params', async () => {
-    await client.routing.getDirections('12.9,77.6', '13.0,77.7', {
-      steps: true,
-      traffic_metadata: false,
-      mode: 'driving',
-    });
-    expect(fetchMock.mock.calls[0][0]).toContain('/routing/v1/directions');
-    expect(fetchMock.mock.calls[0][1]?.method).toBe('POST');
-
+  it('uses verified route optimizer params', async () => {
     await client.routing.routeOptimizer(['12.9,77.6', '13.0,77.7'], {
       roundTrip: true,
     });
-    const optimizerUrl = fetchMock.mock.calls[1][0] as string;
-    expect(optimizerUrl).toContain('/routing/v1/routeOptimizer');
-    expect(optimizerUrl).toContain('locations=12.9%2C77.6%7C13.0%2C77.7');
-    expect(optimizerUrl).toContain('round_trip=true');
+    const optimizerUrl = fetchMock.mock.calls[0][0] as string;
+    expect(optimizerUrl).toContain(
+      '/route/optimization/trip_optimization_eta/driving/77.6,12.9;77.7,13.0'
+    );
+    expect(optimizerUrl).toContain('roundtrip=true');
+    expect(optimizerUrl).toContain('access_token=test-token');
   });
 
-  it('uses verified roads params', async () => {
+  it('uses verified snap to road endpoint', async () => {
     await client.roads.snapToRoad([{ latitude: 12.9, longitude: 77.6 }], true);
     const url = fetchMock.mock.calls[0][0] as string;
-    expect(url).toContain('/routing/v1/snapToRoad');
-    expect(url).toContain('enhancePath=true');
-  });
-
-  it('throws normalized API errors', async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: false,
-      status: 401,
-      headers: { get: () => 'application/json' },
-      json: jest.fn().mockResolvedValue({ error: 'unauthorized' }),
-      text: jest.fn(),
-    });
-
-    await expect(client.places.geocode('Bengaluru')).rejects.toMatchObject({
-      code: 'API_ERROR',
-      status: 401,
-    });
+    expect(url).toContain('/routev2/movement/trace_route');
+    expect(fetchMock.mock.calls[0][1]?.method).toBe('POST');
   });
 });

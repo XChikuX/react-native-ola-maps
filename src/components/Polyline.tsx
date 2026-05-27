@@ -1,5 +1,6 @@
+import type { ComponentType } from 'react';
 import { useMemo } from 'react';
-import { GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
+import { loadMapplsMapSdk } from '../mappls/loaders';
 import type { LatLng, LatLngLiteral, LngLat } from '../types/common';
 import { toLngLat } from '../types/common';
 
@@ -13,13 +14,19 @@ export type PolylineProps = {
 };
 
 export function Polyline({
-  id = 'ola-polyline',
+  id = 'india-polyline',
   coordinates,
   color = '#2563eb',
   width = 4,
   opacity = 1,
   layerProps,
 }: PolylineProps) {
+  const sdk = loadMapplsMapSdk() as {
+    ShapeSource: ComponentType<Record<string, unknown>>;
+    LineLayer: ComponentType<Record<string, unknown>>;
+  };
+  const ShapeSource = sdk.ShapeSource;
+  const LineLayer = sdk.LineLayer;
   const feature = useMemo<GeoJSON.Feature<GeoJSON.LineString>>(
     () => ({
       type: 'Feature',
@@ -35,18 +42,12 @@ export function Polyline({
   );
 
   return (
-    <GeoJSONSource id={`${id}-source`} data={feature}>
-      <Layer
+    <ShapeSource id={`${id}-source`} shape={feature}>
+      <LineLayer
         id={id}
-        type="line"
-        source={`${id}-source`}
-        paint={{
-          'line-color': color,
-          'line-width': width,
-          'line-opacity': opacity,
-        }}
-        {...(layerProps as object)}
+        style={{ lineColor: color, lineWidth: width, lineOpacity: opacity }}
+        {...layerProps}
       />
-    </GeoJSONSource>
+    </ShapeSource>
   );
 }

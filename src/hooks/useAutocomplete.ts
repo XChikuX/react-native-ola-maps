@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useOlaMaps } from './useOlaMaps';
+import { useIndiaMaps } from './useIndiaMaps';
 import type { AutocompleteOptions, AutocompleteResult } from '../types/places';
 
 export function useAutocomplete(
   options?: AutocompleteOptions & { debounceMs?: number }
 ) {
-  const client = useOlaMaps();
+  const client = useIndiaMaps();
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<AutocompleteResult[]>([]);

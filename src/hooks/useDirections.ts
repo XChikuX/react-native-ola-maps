@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useOlaMaps } from './useOlaMaps';
+import { useIndiaMaps } from './useIndiaMaps';
 import { useAsyncRequest } from './useAsyncRequest';
 import type { LatLngString } from '../types/common';
 import type { DirectionsOptions } from '../types/routing';
@@ -7,7 +7,7 @@ import type { DirectionsOptions } from '../types/routing';
 export function useDirections(
   initialArgs?: [LatLngString, LatLngString, DirectionsOptions?]
 ) {
-  const client = useOlaMaps();
+  const client = useIndiaMaps();
   const request = useCallback(
     (
       origin: LatLngString,

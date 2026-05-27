@@ -7,21 +7,26 @@ export class ElevationApi extends BaseApi {
     lat: number,
     lng: number
   ): Promise<ApiResponse<ElevationResult>> {
-    return this.request('/places/v1/elevation', {
-      params: {
-        location: `${lat},${lng}`,
-      },
-    });
+    const response = await this.getMultiElevation([{ lat, lng }]);
+    return {
+      status: response.status,
+      data: response.data.results[0] as ElevationResult,
+    };
   }
 
   async getMultiElevation(
     points: Array<{ lat: number; lng: number }>
   ): Promise<ApiResponse<MultiElevationResult>> {
-    return this.request('/places/v1/elevation', {
-      method: 'POST',
-      body: {
-        locations: points.map((p) => `${p.lat},${p.lng}`),
+    this.requireAccessToken('ElevationApi.getMultiElevation');
+    const response = await this.request<MultiElevationResult>(
+      '/map/utils/elevation',
+      {
+        params: {
+          locations: points.map((p) => `${p.lat},${p.lng}`).join('|'),
+        },
       },
-    });
+      { baseUrl: this.sdkBaseUrl }
+    );
+    return { status: 'ok', data: response };
   }
 }

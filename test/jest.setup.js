@@ -1,28 +1,37 @@
 /* global jest */
 global.fetch = jest.fn();
 
-jest.mock('@maplibre/maplibre-react-native', () => {
-  const React = require('react');
-  const Mock = (name) => {
-    const Component = ({ children, ...props }, ref) =>
-      React.createElement(name, { ...props, ref }, children);
-    Component.displayName = name;
-    return React.forwardRef(Component);
-  };
+jest.mock(
+  'mappls-map-react-native',
+  () => {
+    const React = require('react');
+    const Mock = (name) => {
+      const Component = ({ children, ...props }, ref) =>
+        React.createElement(name, { ...props, ref }, children);
+      Component.displayName = name;
+      return React.forwardRef(Component);
+    };
 
-  return {
-    Map: Mock('Map'),
-    Camera: Mock('Camera'),
-    Marker: Mock('Marker'),
-    GeoJSONSource: Mock('GeoJSONSource'),
-    Layer: Mock('Layer'),
-    Callout: Mock('Callout'),
-    UserLocation: Mock('UserLocation'),
-    NativeUserLocation: Mock('NativeUserLocation'),
-    TransformRequestManager: {
-      addUrlSearchParam: jest.fn(),
-      removeUrlSearchParam: jest.fn(),
-      clear: jest.fn(),
-    },
-  };
-});
+    return {
+      MapView: Mock('MapView'),
+      Camera: Mock('Camera'),
+      PointAnnotation: Mock('PointAnnotation'),
+      ShapeSource: Mock('ShapeSource'),
+      LineLayer: Mock('LineLayer'),
+      FillLayer: Mock('FillLayer'),
+      Callout: Mock('Callout'),
+      UserLocation: Mock('UserLocation'),
+      RestApi: {
+        autoSuggest: jest.fn().mockResolvedValue({ suggestedLocations: [] }),
+        geocode: jest.fn().mockResolvedValue({ results: [] }),
+        reverseGeocode: jest.fn().mockResolvedValue({ results: [] }),
+        placeDetail: jest.fn().mockResolvedValue({ mapplsPin: 'MMI000' }),
+        nearby: jest.fn().mockResolvedValue({ suggestedLocations: [] }),
+        direction: jest.fn().mockResolvedValue({ routes: [] }),
+        distance: jest.fn().mockResolvedValue({ results: [] }),
+        POIAlongRoute: jest.fn().mockResolvedValue({ suggestedPOIs: [] }),
+      },
+    };
+  },
+  { virtual: true }
+);

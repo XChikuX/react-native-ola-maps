@@ -1,4 +1,19 @@
 {
   "extends": "./tsconfig",
-  "exclude": ["example", "lib", "src/**/__tests__", "test"]
+  "exclude": [
+    "example",
+    "lib",
+    "src/**/__tests__",
+    "test"
+  ],
+  "compilerOptions": {
+    "paths": {
+      "react-native-india-maps": [
+        "./src/index"
+      ],
+      "react-native-ola-maps": [
+        "./src/index"
+      ]
+    }
+  }
 }

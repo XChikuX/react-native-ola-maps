@@ -6,3 +6,4 @@ export { RoadsApi } from './roads';
 export { GeofencingApi } from './geofencing';
 export { ElevationApi } from './elevation';
 export { TilesApi } from './tiles';
+export { callMapplsRestApi } from './native';

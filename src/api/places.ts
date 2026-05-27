@@ -1,4 +1,5 @@
 import { BaseApi } from './base';
+import { callMapplsRestApi } from './native';
 import type {
   AutocompleteOptions,
   AutocompleteResult,
@@ -11,145 +12,165 @@ import type {
   TextSearchResult,
 } from '../types/places';
 import type { ApiResponse, Language, LatLngLiteral } from '../types/common';
-import { toLatLngString } from '../types/common';
+import { toLatLngString, toMapplsCoordinateString } from '../types/common';
+
+const toLocationObject = (location: AutocompleteOptions['location']) =>
+  location
+    ? { latitude: location.latitude, longitude: location.longitude }
+    : undefined;
+
+const ok = <T>(data: T): ApiResponse<T> => ({ status: 'ok', data });
 
 export class PlacesApi extends BaseApi {
+  async autoSuggest(
+    query: string,
+    options?: AutocompleteOptions
+  ): Promise<ApiResponse<AutocompleteResult[]>> {
+    const response = (await callMapplsRestApi<Record<string, unknown>>(
+      'autoSuggest',
+      {
+        query,
+        location: toLocationObject(options?.location),
+        zoom: options?.zoom,
+        hyperLocal: options?.hyperLocal,
+        filter: options?.filter,
+        pod: options?.pod,
+        tokenizeAddress: options?.tokenizeAddress,
+      }
+    )) as {
+      suggestedLocations?: AutocompleteResult[];
+    };
+
+    return ok(response.suggestedLocations ?? []);
+  }
+
   async autocomplete(
     input: string,
     options?: AutocompleteOptions
   ): Promise<ApiResponse<AutocompleteResult[]>> {
-    return this.request('/places/v1/autocomplete', {
-      params: {
-        input,
-        location: options?.location
-          ? toLatLngString(options.location)
-          : undefined,
-        radius: options?.radius,
-        strictbounds: options?.strictbounds,
-        language: options?.language,
-        types: options?.types,
-      },
-    });
+    return this.autoSuggest(input, options);
   }
 
   async geocode(
     address: string,
-    language?: Language,
-    bounds?: string
+    _language?: Language,
+    _bounds?: string
   ): Promise<ApiResponse<GeocodeResult[]>> {
-    return this.request('/places/v1/geocode', {
-      params: { address, language, bounds },
-    });
+    const response = (await callMapplsRestApi<Record<string, unknown>>(
+      'geocode',
+      { address }
+    )) as { results?: GeocodeResult[] };
+    return ok(response.results ?? []);
   }
 
   async reverseGeocode(
     lat: number,
     lng: number,
-    language?: Language
+    _language?: Language
   ): Promise<ApiResponse<ReverseGeocodeResult[]>> {
-    return this.request('/places/v1/reverse-geocode', {
-      params: {
-        latlng: `${lat},${lng}`,
-        language,
-      },
-    });
+    const response = (await callMapplsRestApi<Record<string, unknown>>(
+      'reverseGeocode',
+      { latitude: lat, longitude: lng }
+    )) as { results?: ReverseGeocodeResult[] };
+    return ok(response.results ?? []);
   }
 
   async placeDetails(
-    placeId: string,
-    language?: Language
+    mapplsPin: string,
+    _language?: Language
   ): Promise<ApiResponse<PlaceDetails>> {
-    return this.request('/places/v1/details', {
-      params: { place_id: placeId, language },
-    });
+    const response = (await callMapplsRestApi<PlaceDetails>('placeDetail', {
+      mapplsPin,
+    })) as PlaceDetails;
+    return ok(response);
   }
 
   async placeDetailsAdvanced(
-    placeId: string,
+    mapplsPin: string,
     language?: Language
   ): Promise<ApiResponse<PlaceDetails>> {
-    return this.request('/places/v1/details/advanced', {
-      params: { place_id: placeId, language },
-    });
+    return this.placeDetails(mapplsPin, language);
   }
 
   async nearbySearch(
     location: LatLngLiteral,
     options?: NearbySearchOptions
   ): Promise<ApiResponse<NearbySearchResult[]>> {
-    return this.request('/places/v1/nearbysearch', {
-      params: {
+    const response = (await callMapplsRestApi<Record<string, unknown>>(
+      'nearby',
+      {
+        keyword: options?.keyword ?? options?.types ?? '',
         location: toLatLngString(location),
+        page: options?.page,
         radius: options?.radius,
-        types: options?.types,
-        rankBy: options?.rankBy ?? options?.rankby,
-        language: options?.language,
-        limit: options?.limit,
-        layers: options?.layers,
-        strictbounds: options?.strictbounds,
-        withCentroid: options?.withCentroid,
-      },
-    });
+        bounds: options?.bounds,
+        filter: options?.filter,
+        richData: options?.richData,
+        sortBy: options?.sortBy,
+        userName: options?.userName,
+      }
+    )) as { suggestedLocations?: NearbySearchResult[] };
+    return ok(response.suggestedLocations ?? []);
   }
 
   async nearbySearchAdvanced(
     location: LatLngLiteral,
     options?: NearbySearchOptions
   ): Promise<ApiResponse<NearbySearchResult[]>> {
-    return this.request('/places/v1/nearbysearch/advanced', {
-      params: {
-        location: toLatLngString(location),
-        radius: options?.radius,
-        types: options?.types,
-        rankBy: options?.rankBy ?? options?.rankby,
-        language: options?.language,
-        limit: options?.limit,
-        layers: options?.layers,
-        strictbounds: options?.strictbounds,
-        withCentroid: options?.withCentroid,
-      },
-    });
+    return this.nearbySearch(location, options);
   }
 
   async textSearch(
     input: string,
     options?: TextSearchOptions
   ): Promise<ApiResponse<TextSearchResult[]>> {
-    return this.request('/places/v1/textsearch', {
-      params: {
-        input,
-        location: options?.location
-          ? toLatLngString(options.location)
-          : undefined,
-        radius: options?.radius,
-        language: options?.language,
-        types: options?.types,
-        size: options?.size,
-      },
+    return this.autoSuggest(input, options) as Promise<
+      ApiResponse<TextSearchResult[]>
+    >;
+  }
+
+  async poiAlongRoute(
+    path: string,
+    category: string,
+    options?: {
+      buffer?: number;
+      geometries?: string;
+      page?: number;
+      sort?: boolean;
+    }
+  ) {
+    return callMapplsRestApi('POIAlongRoute', {
+      path,
+      category,
+      buffer: options?.buffer,
+      geometries: options?.geometries,
+      page: options?.page,
+      sort: options?.sort,
     });
   }
 
   async addressValidation(
     address: string
   ): Promise<ApiResponse<GeocodeResult>> {
-    return this.request('/places/v1/addressvalidation', {
-      params: { address },
-    });
+    const response = await this.geocode(address);
+    return ok(response.data[0] as GeocodeResult);
   }
 
   async photo(photoReference: string): Promise<Blob> {
-    const url = this.buildUrl('/places/v1/photo', {
+    this.requireAccessToken('PlacesApi.photo');
+    const url = this.buildUrl('/search/maps/place/photo', {
       photo_reference: photoReference,
     });
-
-    const response = await fetch(url.toString(), {
-      headers: { 'X-OlaMaps-RN-SDK-Version': '0.2.0' },
-    });
+    const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(
-        `OlaMaps API error (${response.status}): Failed to fetch photo`
+        `India Maps API error (${response.status}): Failed to fetch photo`
       );
     }
     return response.blob();
+  }
+
+  toMapplsLocation(location: LatLngLiteral) {
+    return toMapplsCoordinateString(location);
   }
 }

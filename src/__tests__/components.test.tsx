@@ -1,27 +1,29 @@
 import TestRenderer, { act } from 'react-test-renderer';
-import { TransformRequestManager } from '@maplibre/maplibre-react-native';
-import { MapView, Marker, OlaMapsProvider, Polyline, Polygon } from '../index';
+import {
+  IndiaMapsProvider,
+  MapView,
+  Marker,
+  Polyline,
+  Polygon,
+} from '../index';
 
 describe('React components', () => {
-  it('renders MapView with provider API key and registers MapLibre transform', () => {
+  it('renders MapView with the Mappls SDK wrapper', () => {
     let renderer: TestRenderer.ReactTestRenderer | undefined;
 
     act(() => {
       renderer = TestRenderer.create(
-        <OlaMapsProvider apiKey="test-key">
+        <IndiaMapsProvider accessToken="test-token">
           <MapView
             initialRegion={{ latitude: 12.9, longitude: 77.6, zoomLevel: 12 }}
           />
-        </OlaMapsProvider>
+        </IndiaMapsProvider>
       );
     });
 
     expect(
-      renderer?.root.findAll((node) => String(node.type) === 'Map')
+      renderer?.root.findAll((node) => String(node.type) === 'MapView')
     ).toHaveLength(1);
-    expect(TransformRequestManager.addUrlSearchParam).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'api_key', value: 'test-key' })
-    );
   });
 
   it('renders marker and geometry overlays', () => {
@@ -29,11 +31,9 @@ describe('React components', () => {
 
     act(() => {
       renderer = TestRenderer.create(
-        <OlaMapsProvider apiKey="test-key">
+        <IndiaMapsProvider accessToken="test-token">
           <MapView>
-            <Marker coordinate={{ latitude: 12.9, longitude: 77.6 }}>
-              <></>
-            </Marker>
+            <Marker coordinate={{ latitude: 12.9, longitude: 77.6 }} />
             <Polyline
               coordinates={[
                 [77.6, 12.9],
@@ -48,15 +48,18 @@ describe('React components', () => {
               ]}
             />
           </MapView>
-        </OlaMapsProvider>
+        </IndiaMapsProvider>
       );
     });
 
     expect(
-      renderer?.root.findAll((node) => String(node.type) === 'GeoJSONSource')
+      renderer?.root.findAll((node) => String(node.type) === 'ShapeSource')
     ).toHaveLength(2);
     expect(
-      renderer?.root.findAll((node) => String(node.type) === 'Layer')
-    ).toHaveLength(3);
+      renderer?.root.findAll((node) => String(node.type) === 'LineLayer')
+    ).toHaveLength(2);
+    expect(
+      renderer?.root.findAll((node) => String(node.type) === 'FillLayer')
+    ).toHaveLength(1);
   });
 });

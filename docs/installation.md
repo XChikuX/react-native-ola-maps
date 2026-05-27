@@ -1,26 +1,53 @@
 # Installation
 
 ```sh
-bun add react-native-ola-maps @maplibre/maplibre-react-native
+bun add react-native-india-maps mappls-map-react-native
 ```
 
-Map components are powered by `@maplibre/maplibre-react-native` v11. Follow the MapLibre React Native installation steps for your app, including Expo config plugin setup if applicable.
+Optional official packages:
+
+```sh
+bun add mappls-direction-widget-react-native mappls-geofence-widget-react-native mappls-nearby-widget-react-native mappls-search-widgets-react-native mappls-tracking-react-native mappls-polyline
+```
 
 ## Requirements
 
 - React `>=19.1.0`
 - React Native `>=0.80.0`
-- React Native New Architecture enabled
-- Ola Maps API key
+- Expo development build or bare React Native app
+- Mappls auth files for native SDK usage
+- Mappls REST access token for direct HTTP endpoints in this package
 
-## API key
+## Expo plugin
 
-Pass your key to the client or provider:
-
-```tsx
-<OlaMapsProvider apiKey="YOUR_OLA_MAPS_API_KEY">
-  <App />
-</OlaMapsProvider>
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "react-native-india-maps",
+        {
+          "androidConfigFilesDir": "./mappls/android",
+          "iosConfigFilesDir": "./mappls/ios",
+          "iosWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location while using the app.",
+          "backgroundLocation": false
+        }
+      ]
+    ]
+  }
+}
 ```
 
-No native Ola Maps SDK API key entries are required because this package uses Ola REST APIs and MapLibre rendering.
+## Provider
+
+```tsx
+import { IndiaMapsProvider } from 'react-native-india-maps';
+
+<IndiaMapsProvider accessToken="YOUR_MAPPLS_REST_TOKEN">
+  <App />
+</IndiaMapsProvider>;
+```
+
+## Important
+
+`mappls-map-react-native` requires native Mappls configuration files. Expo Go is not supported.

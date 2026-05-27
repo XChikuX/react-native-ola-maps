@@ -26,10 +26,19 @@ export type PaginatedResponse<T> = ApiResponse<T> & {
   limit?: number;
 };
 
-export type OlaMapsConfig = {
-  apiKey: string;
-  baseUrl?: string;
+export type IndiaMapsConfig = {
+  accessToken?: string;
+  apiKey?: string;
+  searchBaseUrl?: string;
+  routeBaseUrl?: string;
+  sdkBaseUrl?: string;
+  tileBaseUrl?: string;
 };
+
+export type OlaMapsConfig = IndiaMapsConfig;
+
+export const resolveAccessToken = (config: IndiaMapsConfig) =>
+  config.accessToken ?? config.apiKey;
 
 export const toLatLngString = (
   location: LatLng | LatLngLiteral | LatLngString
@@ -58,4 +67,23 @@ export const toLngLat = (
   }
 
   return [location.lng, location.lat];
+};
+
+export const toMapplsCoordinateString = (
+  location: LatLng | LatLngLiteral | LatLngString | LngLat
+) => {
+  if (Array.isArray(location)) {
+    return `${location[0]},${location[1]}`;
+  }
+
+  if (typeof location === 'string') {
+    const [lat, lng] = location.split(',');
+    return `${lng},${lat}`;
+  }
+
+  if ('latitude' in location) {
+    return `${location.longitude},${location.latitude}`;
+  }
+
+  return `${location.lng},${location.lat}`;
 };

@@ -1,91 +1,127 @@
-# react-native-ola-maps
+# react-native-india-maps
 
-A modern React Native SDK for Ola Maps with:
+A React Native SDK for India Maps built around the official Mappls (MapMyIndia) SDK, official Mappls REST APIs, and Expo config plugins.
 
-- A typed REST API client for Places, Routing, Roads, Geofencing, Elevation, and Tiles
-- React context provider and hooks for API-driven flows
-- MapLibre React Native v11 map components for maps, markers, polylines, polygons, callouts, and user location
+## What changed
 
-## Installation
+- Package name is now `react-native-india-maps`
+- Native map rendering now uses the official `mappls-map-react-native` SDK
+- Expo development builds are supported through a config plugin in this package
+- Mappls styles cannot be rendered directly through `@maplibre/maplibre-react-native` because Mappls does not publish public MapLibre style URLs
+
+## Install
 
 ```sh
-bun add react-native-ola-maps @maplibre/maplibre-react-native
+bun add react-native-india-maps mappls-map-react-native
 ```
 
-Map components use `@maplibre/maplibre-react-native` v11, which requires React Native New Architecture, React `>=19.1.0`, and React Native `>=0.80.0`.
+If you also need official Mappls widgets, install the ones you use:
 
-## API client
-
-```ts
-import { OlaMapsClient } from 'react-native-ola-maps';
-
-const ola = new OlaMapsClient({ apiKey: 'YOUR_OLA_MAPS_API_KEY' });
-
-const suggestions = await ola.places.autocomplete('Koramangala');
-const route = await ola.routing.getDirections(
-  '12.9352,77.6245',
-  '12.9716,77.5946'
-);
-const styleUrl = ola.tiles.getStyleURL('default-light-standard');
+```sh
+bun add mappls-direction-widget-react-native mappls-geofence-widget-react-native mappls-nearby-widget-react-native mappls-search-widgets-react-native mappls-tracking-react-native mappls-polyline
 ```
 
-## React provider and hooks
+## Expo setup
+
+Use an Expo development build, not Expo Go.
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "react-native-india-maps",
+        {
+          "androidConfigFilesDir": "./mappls/android",
+          "iosConfigFilesDir": "./mappls/ios",
+          "iosWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location while using the app.",
+          "backgroundLocation": false
+        }
+      ]
+    ]
+  }
+}
+```
+
+The plugin adds location permissions and automates the main native setup required by the official Mappls SDK. Your app must still provide the real `.conf` and `.olf` files downloaded from the Mappls auth console.
+
+## Provider and hooks
 
 ```tsx
-import { OlaMapsProvider, useAutocomplete } from 'react-native-ola-maps';
+import {
+  IndiaMapsProvider,
+  IndiaMapsClient,
+  MapView,
+  Marker,
+  useAutocomplete,
+} from 'react-native-india-maps';
+
+const client = new IndiaMapsClient({ accessToken: 'YOUR_MAPPLS_REST_TOKEN' });
 
 function SearchBox() {
   const { results, debouncedSearch } = useAutocomplete({ debounceMs: 300 });
-  // call debouncedSearch(text) from your TextInput
   return null;
 }
 
 export function App() {
   return (
-    <OlaMapsProvider apiKey="YOUR_OLA_MAPS_API_KEY">
+    <IndiaMapsProvider client={client}>
+      <MapView
+        style={{ flex: 1 }}
+        styleName="standard"
+        initialRegion={{ latitude: 28.6139, longitude: 77.209, zoomLevel: 12 }}
+      >
+        <Marker
+          id="delhi"
+          coordinate={{ latitude: 28.6139, longitude: 77.209 }}
+        />
+      </MapView>
       <SearchBox />
-    </OlaMapsProvider>
+    </IndiaMapsProvider>
   );
 }
 ```
 
-## Map components
+## Official SDK access
 
-```tsx
-import { MapView, Marker, Polyline, Polygon } from 'react-native-ola-maps';
+This package exposes loaders for the official Mappls packages instead of guessing their public component shapes:
 
-<MapView
-  apiKey="YOUR_OLA_MAPS_API_KEY"
-  styleName="default-light-standard"
-  initialRegion={{ latitude: 12.9716, longitude: 77.5946, zoomLevel: 12 }}
->
-  <Marker coordinate={{ latitude: 12.9716, longitude: 77.5946 }}>
-    <YourMarkerView />
-  </Marker>
-  <Polyline
-    coordinates={[
-      [77.5946, 12.9716],
-      [77.6245, 12.9352],
-    ]}
-  />
-  <Polygon
-    coordinates={[
-      [77.59, 12.97],
-      [77.62, 12.97],
-      [77.62, 12.93],
-    ]}
-  />
-</MapView>;
-```
+- `loadMapplsMapSdk()`
+- `loadMapplsDirectionWidget()`
+- `loadMapplsGeofenceWidget()`
+- `loadMapplsNearbyWidget()`
+- `loadMapplsSearchWidgets()`
+- `loadMapplsTrackingSdk()`
+- `loadMapplsPolyline()`
 
-## API surface
+You can also access them from `client.sdk`.
 
-- `places`: autocomplete, geocode, reverse geocode, place details, nearby search, text search, address validation, photo
-- `routing`: directions, basic directions, distance matrix, basic matrix, route optimizer, fleet planner
-- `roads`: snap to road, nearest roads, speed limits
-- `geofencing`: create, get, update, delete, list, check status
-- `elevation`: single and multi-point elevation
-- `tiles`: style URLs, static map URLs, vector tile helpers, MapLibre map options
+## API coverage
+
+### Native Mappls SDK-backed
+
+- Auto suggest
+- Geocode
+- Reverse geocode
+- Place detail
+- Nearby search
+- Directions
+- Distance matrix
+- POI along route
+- Official native map rendering and widgets
+
+### Direct HTTP integrations for public APIs not exposed by the RN SDK
+
+- Elevation: `https://sdk.mappls.com/map/utils/elevation`
+- Route optimization: `https://route.mappls.com/route/optimization/...`
+- Snap to road v2: `https://route.mappls.com/routev2/movement/trace_route`
+- Still map images: `https://tile.mappls.com/map/raster_tile/still_image`
+
+## Notes
+
+- `accessToken` is used for direct REST calls in this package
+- The native Mappls SDK itself authenticates with platform-specific `.conf` and `.olf` files
+- Legacy `OlaMapsClient`, `OlaMapsProvider`, and `useOlaMaps` aliases are still exported for compatibility
 
 ## License
 

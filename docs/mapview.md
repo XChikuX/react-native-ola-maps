@@ -1,28 +1,30 @@
 # `<MapView />` Component API
 
-`MapView` wraps `@maplibre/maplibre-react-native` v11's `Map` component and configures Ola Maps vector style URLs.
+`MapView` wraps the official `mappls-map-react-native` `MapView` component.
 
 ## Props
 
-| Prop            | Type            | Notes                                       |
-| --------------- | --------------- | ------------------------------------------- |
-| `apiKey`        | `string`        | Ola Maps API key. Optional inside provider. |
-| `client`        | `OlaMapsClient` | Optional preconfigured client.              |
-| `styleName`     | `MapStyle`      | Ola style name. Defaults to light standard. |
-| `mapStyle`      | `string/object` | Override with a MapLibre style URL or JSON. |
-| `initialRegion` | `InitialRegion` | `{ latitude, longitude, zoomLevel }`.       |
-| `initialCenter` | `[lng, lat]`    | MapLibre-style initial center.              |
-| `initialZoom`   | `number`        | Initial zoom.                               |
-| `cameraProps`   | `CameraProps`   | Extra MapLibre Camera props.                |
-
-All other MapLibre v11 `MapProps` pass through to the underlying map.
+| Prop            | Type              | Notes                                             |
+| --------------- | ----------------- | ------------------------------------------------- |
+| `accessToken`   | `string`          | Optional REST token for this package's HTTP APIs. |
+| `apiKey`        | `string`          | Alias for `accessToken`.                          |
+| `client`        | `IndiaMapsClient` | Optional preconfigured client.                    |
+| `styleName`     | `string`          | Native Mappls style name.                         |
+| `initialRegion` | `InitialRegion`   | `{ latitude, longitude, zoomLevel }`.             |
+| `initialCenter` | `[lng, lat]`      | Initial center coordinate.                        |
+| `initialZoom`   | `number`          | Initial zoom level.                               |
+| `cameraProps`   | `object`          | Passed to the native Mappls `Camera`.             |
 
 ## Example
 
 ```tsx
 <MapView
-  apiKey="YOUR_OLA_MAPS_API_KEY"
-  styleName="default-light-standard"
-  initialRegion={{ latitude: 12.9716, longitude: 77.5946, zoomLevel: 12 }}
+  style={{ flex: 1 }}
+  styleName="standard"
+  initialRegion={{ latitude: 28.6139, longitude: 77.209, zoomLevel: 12 }}
 />
 ```
+
+## Important
+
+Mappls does not publish public MapLibre style URLs, so this package uses the official native SDK for map rendering instead of `@maplibre/maplibre-react-native`.

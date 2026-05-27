@@ -1,8 +1,8 @@
-import { OlaMapsClient, OlaMapsError, VERSION } from '../index';
+import { IndiaMapsClient, IndiaMapsError, VERSION } from '../index';
 
-describe('OlaMapsClient', () => {
+describe('IndiaMapsClient', () => {
   it('creates all API namespaces', () => {
-    const client = new OlaMapsClient({ apiKey: 'test-key' });
+    const client = new IndiaMapsClient({ accessToken: 'test-token' });
 
     expect(client.places).toBeDefined();
     expect(client.routing).toBeDefined();
@@ -10,10 +10,10 @@ describe('OlaMapsClient', () => {
     expect(client.geofencing).toBeDefined();
     expect(client.elevation).toBeDefined();
     expect(client.tiles).toBeDefined();
-    expect(OlaMapsClient.VERSION).toBe(VERSION);
+    expect(IndiaMapsClient.VERSION).toBe(VERSION);
   });
 
-  it('requires an API key', () => {
-    expect(() => new OlaMapsClient({ apiKey: '' })).toThrow(OlaMapsError);
+  it('allows native-sdk-only usage without an access token', () => {
+    expect(() => new IndiaMapsClient()).not.toThrow(IndiaMapsError);
   });
 });

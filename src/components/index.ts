@@ -1,5 +1,9 @@
 export { MapView } from './MapView';
-export type { OlaMapViewProps, InitialRegion } from './MapView';
+export type {
+  IndiaMapViewProps,
+  OlaMapViewProps,
+  InitialRegion,
+} from './MapView';
 export { Marker } from './Marker';
 export type { MarkerProps } from './Marker';
 export { Polyline } from './Polyline';

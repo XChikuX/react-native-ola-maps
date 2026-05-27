@@ -1,64 +1,53 @@
-import { BaseApi } from './base';
 import type {
   Geofence,
   GeofenceData,
   GeofenceStatusResult,
 } from '../types/geofencing';
 import type { ApiResponse, PaginatedResponse } from '../types/common';
+import { loadMapplsGeofenceWidget } from '../mappls/loaders';
 
-export class GeofencingApi extends BaseApi {
-  async create(geofenceData: GeofenceData): Promise<ApiResponse<Geofence>> {
-    return this.request('/geofencing/v1/fences', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(geofenceData),
-    });
+const unsupported = (): never => {
+  throw new Error(
+    'Mappls geofencing CRUD is not part of the public mappls-map-react-native SDK. Use loadMapplsGeofenceWidget() for the official UI widget or integrate the separate InTouch APIs on your backend.'
+  );
+};
+
+export class GeofencingApi {
+  loadWidget() {
+    return loadMapplsGeofenceWidget();
   }
 
-  async getById(fenceId: string): Promise<ApiResponse<Geofence>> {
-    return this.request(`/geofencing/v1/fences/${fenceId}`);
+  async create(_geofenceData: GeofenceData): Promise<ApiResponse<Geofence>> {
+    return unsupported();
+  }
+
+  async getById(_fenceId: string): Promise<ApiResponse<Geofence>> {
+    return unsupported();
   }
 
   async update(
-    fenceId: string,
-    data: Partial<GeofenceData>
+    _fenceId: string,
+    _data: Partial<GeofenceData>
   ): Promise<ApiResponse<Geofence>> {
-    return this.request(`/geofencing/v1/fences/${fenceId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
+    return unsupported();
   }
 
-  async deleteById(fenceId: string): Promise<ApiResponse<void>> {
-    return this.request(`/geofencing/v1/fences/${fenceId}`, {
-      method: 'DELETE',
-    });
+  async deleteById(_fenceId: string): Promise<ApiResponse<void>> {
+    return unsupported();
   }
 
   async list(
-    projectId: string,
-    page?: number,
-    limit?: number
+    _projectId: string,
+    _page?: number,
+    _limit?: number
   ): Promise<PaginatedResponse<Geofence[]>> {
-    return this.request('/geofencing/v1/fences', {
-      params: {
-        projectId,
-        page: page?.toString(),
-        limit: limit?.toString(),
-      },
-    });
+    return unsupported();
   }
 
   async checkStatus(
-    fenceId: string,
-    location: { lat: number; lng: number }
+    _fenceId: string,
+    _location: { lat: number; lng: number }
   ): Promise<ApiResponse<GeofenceStatusResult>> {
-    return this.request(`/geofencing/v1/fences/${fenceId}/status`, {
-      params: {
-        lat: location.lat.toString(),
-        lng: location.lng.toString(),
-      },
-    });
+    return unsupported();
   }
 }
