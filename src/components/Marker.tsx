@@ -1,4 +1,4 @@
-import MapLibreGL from '@maplibre/maplibre-react-native';
+import { Marker as MapLibreMarker } from '@maplibre/maplibre-react-native';
 import type { LatLng, LatLngLiteral, LngLat } from '../types/common';
 import { toLngLat } from '../types/common';
 
@@ -16,8 +16,8 @@ export function Marker({
 }: MarkerProps) {
   const lngLat = Array.isArray(coordinate) ? coordinate : toLngLat(coordinate);
   return (
-    <MapLibreGL.PointAnnotation id={id} coordinate={lngLat} {...props}>
-      {children as any}
-    </MapLibreGL.PointAnnotation>
+    <MapLibreMarker id={id} lngLat={lngLat} {...props}>
+      {(children as any) ?? <></>}
+    </MapLibreMarker>
   );
 }

@@ -1,6 +1,12 @@
 import { forwardRef, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import MapLibreGL from '@maplibre/maplibre-react-native';
+import {
+  Camera,
+  Map,
+  type CameraProps as MapLibreCameraProps,
+  type MapProps as MapLibreMapProps,
+  type MapRef,
+} from '@maplibre/maplibre-react-native';
 import { IndiaMapsClient } from '../IndiaMapsClient';
 import { IndiaMapsContext } from '../providers/IndiaMapsProvider';
 import type { LatLng, LngLat } from '../types/common';
@@ -19,14 +25,12 @@ export type IndiaMapViewProps = {
   initialCenter?: LngLat;
   initialZoom?: number;
   initialRegion?: InitialRegion;
-  cameraProps?: Record<string, unknown>;
+  cameraProps?: Omit<MapLibreCameraProps, 'center' | 'zoom'>;
   children?: ReactNode;
-  style?: Record<string, unknown>;
   onMapReady?: () => void;
-  onRegionDidChange?: (event: unknown) => void;
-};
+} & Omit<MapLibreMapProps, 'children' | 'mapStyle' | 'onDidFinishLoadingMap'>;
 
-export const MapView = forwardRef<any, IndiaMapViewProps>(
+export const MapView = forwardRef<MapRef, IndiaMapViewProps>(
   (
     {
       accessToken,
@@ -61,21 +65,22 @@ export const MapView = forwardRef<any, IndiaMapViewProps>(
     const centerCoordinate =
       initialCenter ?? (initialRegion ? toLngLat(initialRegion) : undefined);
     const zoomLevel = initialZoom ?? initialRegion?.zoomLevel ?? 12;
-    const styleURL = resolvedClient.tiles.getStyleURL(styleName);
+    const mapStyle = resolvedClient.tiles.getStyleURL(styleName);
 
     return (
-      <MapLibreGL.MapView
+      <Map
         ref={ref}
-        styleURL={styleURL}
+        mapStyle={mapStyle}
+        onDidFinishLoadingMap={onMapReady}
         {...(mapProps as Record<string, unknown>)}
       >
-        <MapLibreGL.Camera
-          centerCoordinate={centerCoordinate}
-          zoomLevel={zoomLevel}
+        <Camera
+          center={centerCoordinate}
+          zoom={zoomLevel}
           {...(cameraProps ?? {})}
         />
         {children}
-      </MapLibreGL.MapView>
+      </Map>
     );
   }
 );

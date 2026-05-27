@@ -22,7 +22,7 @@ describe('React components', () => {
     });
 
     expect(
-      renderer?.root.findAll((node) => String(node.type) === 'MapView')
+      renderer?.root.findAll((node) => String(node.type) === 'Map')
     ).toHaveLength(1);
   });
 
@@ -53,13 +53,10 @@ describe('React components', () => {
     });
 
     expect(
-      renderer?.root.findAll((node) => String(node.type) === 'ShapeSource')
+      renderer?.root.findAll((node) => String(node.type) === 'GeoJSONSource')
     ).toHaveLength(2);
     expect(
-      renderer?.root.findAll((node) => String(node.type) === 'LineLayer')
-    ).toHaveLength(2);
-    expect(
-      renderer?.root.findAll((node) => String(node.type) === 'FillLayer')
-    ).toHaveLength(1);
+      renderer?.root.findAll((node) => String(node.type) === 'Layer')
+    ).toHaveLength(3);
   });
 });

@@ -1,15 +1,16 @@
 # Installation
 
 ```sh
-bun add react-native-india-maps @maplibre/maplibre-react-native
+bun add react-native-india-maps @maplibre/maplibre-react-native@^11.0.0
 ```
 
 ## Requirements
 
 - React `>=19.1.0`
 - React Native `>=0.80.0`
-- `@maplibre/maplibre-react-native` `>=10.0.0`
+- `@maplibre/maplibre-react-native` `>=11.0.0`
 - Expo development build or bare React Native app
+- React Native New Architecture enabled
 - Ola Maps API key or Mappls access token
 
 ## Expo plugin
@@ -55,5 +56,6 @@ const client = new IndiaMapsClient({ apiKey: 'YOUR_OLA_MAPS_API_KEY' });
 ## Important
 
 - Expo Go is not supported — MapLibre requires native rendering
+- MapLibre v11 only supports the React Native New Architecture
 - No `.conf` or `.olf` files are needed (those were Mappls native SDK artifacts)
 - The map rendering is fully handled by `@maplibre/maplibre-react-native`

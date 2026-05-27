@@ -17,7 +17,7 @@ A React Native SDK for India Maps powered by **MapLibre** for rendering and supp
 ## Install
 
 ```sh
-bun add react-native-india-maps @maplibre/maplibre-react-native
+bun add react-native-india-maps @maplibre/maplibre-react-native@^11.0.0
 ```
 
 ## Expo setup
@@ -41,6 +41,8 @@ Use an Expo development build, not Expo Go.
 ```
 
 The plugin adds location permissions for both Android and iOS. No native SDK configuration files are needed — MapLibre handles all map rendering.
+
+MapLibre React Native v11 requires the React Native New Architecture. Expo Go is not supported.
 
 ## Provider and hooks
 

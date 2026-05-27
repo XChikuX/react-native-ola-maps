@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import MapLibreGL from '@maplibre/maplibre-react-native';
+import { GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
 import type { LatLng, LatLngLiteral, LngLat } from '../types/common';
 import { toLngLat } from '../types/common';
 
@@ -59,17 +59,19 @@ export function Polygon({
   );
 
   return (
-    <MapLibreGL.ShapeSource id={`${id}-source`} shape={feature}>
-      <MapLibreGL.FillLayer
+    <GeoJSONSource id={`${id}-source`} data={feature}>
+      <Layer
         id={`${id}-fill`}
-        style={{ fillColor, fillOpacity }}
+        type="fill"
+        paint={{ 'fill-color': fillColor, 'fill-opacity': fillOpacity }}
         {...fillLayerProps}
       />
-      <MapLibreGL.LineLayer
+      <Layer
         id={`${id}-stroke`}
-        style={{ lineColor: strokeColor, lineWidth: strokeWidth }}
+        type="line"
+        paint={{ 'line-color': strokeColor, 'line-width': strokeWidth }}
         {...lineLayerProps}
       />
-    </MapLibreGL.ShapeSource>
+    </GeoJSONSource>
   );
 }

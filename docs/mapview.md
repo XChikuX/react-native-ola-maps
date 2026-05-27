@@ -1,6 +1,6 @@
 # `<MapView />` Component API
 
-`MapView` wraps `@maplibre/maplibre-react-native` MapView with Ola Maps vector tile styles.
+`MapView` wraps the MapLibre v11 `Map` component with Ola Maps vector tile styles.
 
 ## Props
 
@@ -43,9 +43,10 @@ import { MapView, Marker, Polyline } from 'react-native-india-maps';
 
 ## How it works
 
-- The `MapView` component uses `@maplibre/maplibre-react-native` for rendering
+- The `MapView` component uses `@maplibre/maplibre-react-native` v11 for rendering
 - Style URLs are constructed from Ola Maps tile endpoints: `https://api.olamaps.io/tiles/vector/v1/styles/{styleName}/style.json`
 - The API key is injected via the style URL query parameter
+- React Native New Architecture is required by MapLibre v11
 - No proprietary native SDKs are required
 
 ## Available styles

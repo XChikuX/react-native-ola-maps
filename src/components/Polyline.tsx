@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import MapLibreGL from '@maplibre/maplibre-react-native';
+import { GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
 import type { LatLng, LatLngLiteral, LngLat } from '../types/common';
 import { toLngLat } from '../types/common';
 
@@ -35,12 +35,17 @@ export function Polyline({
   );
 
   return (
-    <MapLibreGL.ShapeSource id={`${id}-source`} shape={feature}>
-      <MapLibreGL.LineLayer
+    <GeoJSONSource id={`${id}-source`} data={feature}>
+      <Layer
         id={id}
-        style={{ lineColor: color, lineWidth: width, lineOpacity: opacity }}
+        type="line"
+        paint={{
+          'line-color': color,
+          'line-width': width,
+          'line-opacity': opacity,
+        }}
         {...layerProps}
       />
-    </MapLibreGL.ShapeSource>
+    </GeoJSONSource>
   );
 }

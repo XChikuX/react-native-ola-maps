@@ -49,8 +49,8 @@ export class TilesApi {
   }
 
   /**
-   * Returns a transform request function for MapLibre that appends the API key
-   * to all tile requests. Used with MapView's `requestTransformFn` or similar.
+   * Returns a transform request function that appends the API key
+   * to all Ola Maps tile requests.
    */
   getTransformRequest(): (url: string) => TransformRequest {
     const apiKey = this.accessToken;
@@ -65,16 +65,16 @@ export class TilesApi {
   }
 
   getMapOptions(options?: MapOptions): {
-    styleURL: string;
-    centerCoordinate?: [number, number];
-    zoomLevel?: number;
+    mapStyle: string;
+    center?: [number, number];
+    zoom?: number;
     bearing?: number;
     pitch?: number;
   } {
     return {
-      styleURL: this.getStyleURL(options?.style),
-      centerCoordinate: options?.center,
-      zoomLevel: options?.zoom ?? 12,
+      mapStyle: this.getStyleURL(options?.style),
+      center: options?.center,
+      zoom: options?.zoom ?? 12,
       bearing: options?.bearing ?? 0,
       pitch: options?.pitch ?? 0,
     };
