@@ -1,4 +1,5 @@
 import { Marker as MapLibreMarker } from '@maplibre/maplibre-react-native';
+import { View } from 'react-native';
 import type { LatLng, LatLngLiteral, LngLat } from '../types/common';
 import { toLngLat } from '../types/common';
 
@@ -17,7 +18,7 @@ export function Marker({
   const lngLat = Array.isArray(coordinate) ? coordinate : toLngLat(coordinate);
   return (
     <MapLibreMarker id={id} lngLat={lngLat} {...props}>
-      {(children as any) ?? <></>}
+      {(children as any) ?? <View />}
     </MapLibreMarker>
   );
 }

@@ -35,8 +35,8 @@ import { MapView, Marker, Polyline } from 'react-native-india-maps';
       [77.209, 28.6139],
       [77.22, 28.62],
     ]}
-    lineColor="#007AFF"
-    lineWidth={3}
+    color="#007AFF"
+    width={3}
   />
 </MapView>
 ```

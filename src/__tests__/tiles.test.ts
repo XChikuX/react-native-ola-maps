@@ -52,4 +52,24 @@ describe('TilesApi', () => {
     expect(url).toContain('center=12.9%2C77.6');
     expect(url).toContain('access_token=test-token');
   });
+
+  it('returns v11-compatible map options', () => {
+    expect(
+      tiles.getMapOptions({
+        style: 'default-light-standard',
+        center: [77.6, 12.9],
+        zoom: 14,
+        bearing: 15,
+        pitch: 30,
+      })
+    ).toEqual({
+      mapStyle: expect.stringContaining(
+        '/tiles/vector/v1/styles/default-light-standard/style.json'
+      ),
+      center: [77.6, 12.9],
+      zoom: 14,
+      bearing: 15,
+      pitch: 30,
+    });
+  });
 });
