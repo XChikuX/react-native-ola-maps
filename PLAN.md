@@ -179,11 +179,12 @@ react-native-ola-maps/
 
 ### Phase 3: React Native Components
 
-- [ ] OlaMapsProvider context
-- [ ] MapView component (wrapping @maplibre/maplibre-react-native)
-- [ ] Marker, Polyline, Polygon components
-- [ ] UserLocation component
-- [ ] Callout component
+- [x] OlaMapsProvider context (IndiaMapsProvider)
+- [x] MapView component (wrapping @maplibre/maplibre-react-native)
+- [x] Marker, Polyline, Polygon components
+- [x] UserLocation component
+- [x] Callout component
+- [x] Dual-provider support (Ola Maps + Mappls backends)
 
 ### Phase 4: Hooks & Integration
 

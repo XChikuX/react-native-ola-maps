@@ -1,5 +1,4 @@
-import type { ComponentType } from 'react';
-import { loadMapplsMapSdk } from '../mappls/loaders';
+import MapLibreGL from '@maplibre/maplibre-react-native';
 import type { LatLng, LatLngLiteral, LngLat } from '../types/common';
 import { toLngLat } from '../types/common';
 
@@ -12,12 +11,13 @@ export type MarkerProps = {
 export function Marker({
   id = 'india-marker',
   coordinate,
+  children,
   ...props
 }: MarkerProps) {
-  const sdk = loadMapplsMapSdk() as {
-    PointAnnotation: ComponentType<Record<string, unknown>>;
-  };
-  const PointAnnotation = sdk.PointAnnotation;
   const lngLat = Array.isArray(coordinate) ? coordinate : toLngLat(coordinate);
-  return <PointAnnotation id={id} coordinate={lngLat} {...props} />;
+  return (
+    <MapLibreGL.PointAnnotation id={id} coordinate={lngLat} {...props}>
+      {children as any}
+    </MapLibreGL.PointAnnotation>
+  );
 }

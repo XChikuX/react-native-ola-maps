@@ -4,5 +4,5 @@ const { withIndiaMaps } = require('./plugin/withIndiaMaps');
 module.exports = createRunOncePlugin(
   withIndiaMaps,
   'react-native-india-maps',
-  '0.2.0'
+  '0.3.0'
 );

@@ -1,22 +1,16 @@
 # Installation
 
 ```sh
-bun add react-native-india-maps mappls-map-react-native
-```
-
-Optional official packages:
-
-```sh
-bun add mappls-direction-widget-react-native mappls-geofence-widget-react-native mappls-nearby-widget-react-native mappls-search-widgets-react-native mappls-tracking-react-native mappls-polyline
+bun add react-native-india-maps @maplibre/maplibre-react-native
 ```
 
 ## Requirements
 
 - React `>=19.1.0`
 - React Native `>=0.80.0`
+- `@maplibre/maplibre-react-native` `>=10.0.0`
 - Expo development build or bare React Native app
-- Mappls auth files for native SDK usage
-- Mappls REST access token for direct HTTP endpoints in this package
+- Ola Maps API key or Mappls access token
 
 ## Expo plugin
 
@@ -27,8 +21,6 @@ bun add mappls-direction-widget-react-native mappls-geofence-widget-react-native
       [
         "react-native-india-maps",
         {
-          "androidConfigFilesDir": "./mappls/android",
-          "iosConfigFilesDir": "./mappls/ios",
           "iosWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location while using the app.",
           "backgroundLocation": false
         }
@@ -38,16 +30,30 @@ bun add mappls-direction-widget-react-native mappls-geofence-widget-react-native
 }
 ```
 
+The plugin handles:
+- Android: `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION` permissions (+ `ACCESS_BACKGROUND_LOCATION` if `backgroundLocation: true`)
+- iOS: `NSLocationWhenInUseUsageDescription` (+ `NSLocationAlwaysAndWhenInUseUsageDescription` if `backgroundLocation: true`)
+
+No native SDK configuration files, Maven repositories, or Gradle plugins are needed — MapLibre handles all rendering natively.
+
 ## Provider
 
 ```tsx
-import { IndiaMapsProvider } from 'react-native-india-maps';
+import { IndiaMapsProvider, IndiaMapsClient } from 'react-native-india-maps';
 
-<IndiaMapsProvider accessToken="YOUR_MAPPLS_REST_TOKEN">
+// Ola Maps (default)
+const client = new IndiaMapsClient({ apiKey: 'YOUR_OLA_MAPS_API_KEY' });
+
+// Or Mappls
+// const client = new IndiaMapsClient({ accessToken: 'YOUR_MAPPLS_TOKEN', provider: 'mappls' });
+
+<IndiaMapsProvider client={client}>
   <App />
 </IndiaMapsProvider>;
 ```
 
 ## Important
 
-`mappls-map-react-native` requires native Mappls configuration files. Expo Go is not supported.
+- Expo Go is not supported — MapLibre requires native rendering
+- No `.conf` or `.olf` files are needed (those were Mappls native SDK artifacts)
+- The map rendering is fully handled by `@maplibre/maplibre-react-native`

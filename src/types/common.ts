@@ -26,9 +26,13 @@ export type PaginatedResponse<T> = ApiResponse<T> & {
   limit?: number;
 };
 
+export type MapProvider = 'ola' | 'mappls';
+
 export type IndiaMapsConfig = {
   accessToken?: string;
   apiKey?: string;
+  provider?: MapProvider;
+  baseUrl?: string;
   searchBaseUrl?: string;
   routeBaseUrl?: string;
   sdkBaseUrl?: string;
@@ -39,6 +43,15 @@ export type OlaMapsConfig = IndiaMapsConfig;
 
 export const resolveAccessToken = (config: IndiaMapsConfig) =>
   config.accessToken ?? config.apiKey;
+
+export const resolveBaseUrl = (config: IndiaMapsConfig): string => {
+  if (config.baseUrl) {
+    return config.baseUrl;
+  }
+  return config.provider === 'mappls'
+    ? 'https://atlas.mappls.com'
+    : 'https://api.olamaps.io';
+};
 
 export const toLatLngString = (
   location: LatLng | LatLngLiteral | LatLngString

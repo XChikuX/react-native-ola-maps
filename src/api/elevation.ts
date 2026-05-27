@@ -18,14 +18,24 @@ export class ElevationApi extends BaseApi {
     points: Array<{ lat: number; lng: number }>
   ): Promise<ApiResponse<MultiElevationResult>> {
     this.requireAccessToken('ElevationApi.getMultiElevation');
-    const response = await this.request<MultiElevationResult>(
-      '/map/utils/elevation',
-      {
-        params: {
-          locations: points.map((p) => `${p.lat},${p.lng}`).join('|'),
+    const locations = points.map((p) => `${p.lat},${p.lng}`).join('|');
+
+    if (this.provider === 'mappls') {
+      const response = await this.request<MultiElevationResult>(
+        '/advancedmaps/v1/' + this.accessToken + '/elevation',
+        {
+          params: { locations },
         },
-      },
-      { baseUrl: this.sdkBaseUrl }
+        { baseUrl: this.routeBaseUrl, includeAccessToken: false }
+      );
+      return { status: 'ok', data: response };
+    }
+
+    const response = await this.request<MultiElevationResult>(
+      '/elevation/v1/getElevation',
+      {
+        params: { locations },
+      }
     );
     return { status: 'ok', data: response };
   }

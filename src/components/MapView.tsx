@@ -1,7 +1,7 @@
 import { forwardRef, useContext, useMemo } from 'react';
-import type { ComponentType, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import MapLibreGL from '@maplibre/maplibre-react-native';
 import { IndiaMapsClient } from '../IndiaMapsClient';
-import { loadMapplsMapSdk } from '../mappls/loaders';
 import { IndiaMapsContext } from '../providers/IndiaMapsProvider';
 import type { LatLng, LngLat } from '../types/common';
 import { toLngLat } from '../types/common';
@@ -21,6 +21,9 @@ export type IndiaMapViewProps = {
   initialRegion?: InitialRegion;
   cameraProps?: Record<string, unknown>;
   children?: ReactNode;
+  style?: Record<string, unknown>;
+  onMapReady?: () => void;
+  onRegionDidChange?: (event: unknown) => void;
 };
 
 export const MapView = forwardRef<any, IndiaMapViewProps>(
@@ -39,12 +42,6 @@ export const MapView = forwardRef<any, IndiaMapViewProps>(
     },
     ref
   ) => {
-    const sdk = loadMapplsMapSdk() as {
-      MapView: ComponentType<Record<string, unknown>>;
-      Camera?: ComponentType<Record<string, unknown>>;
-    };
-    const NativeMapView = sdk.MapView;
-    const NativeCamera = sdk.Camera;
     const context = useContext(IndiaMapsContext);
     const resolvedClient = useMemo(() => {
       if (client instanceof IndiaMapsClient) {
@@ -64,23 +61,21 @@ export const MapView = forwardRef<any, IndiaMapViewProps>(
     const centerCoordinate =
       initialCenter ?? (initialRegion ? toLngLat(initialRegion) : undefined);
     const zoomLevel = initialZoom ?? initialRegion?.zoomLevel ?? 12;
-    const mapplsStyle = resolvedClient.tiles.getStyleName(styleName);
+    const styleURL = resolvedClient.tiles.getStyleURL(styleName);
 
     return (
-      <NativeMapView
+      <MapLibreGL.MapView
         ref={ref}
-        mapplsStyle={mapplsStyle}
+        styleURL={styleURL}
         {...(mapProps as Record<string, unknown>)}
       >
-        {NativeCamera ? (
-          <NativeCamera
-            centerCoordinate={centerCoordinate}
-            zoomLevel={zoomLevel}
-            {...(cameraProps ?? {})}
-          />
-        ) : null}
+        <MapLibreGL.Camera
+          centerCoordinate={centerCoordinate}
+          zoomLevel={zoomLevel}
+          {...(cameraProps ?? {})}
+        />
         {children}
-      </NativeMapView>
+      </MapLibreGL.MapView>
     );
   }
 );

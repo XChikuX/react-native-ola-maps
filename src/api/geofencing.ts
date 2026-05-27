@@ -1,53 +1,114 @@
+import { BaseApi } from './base';
 import type {
   Geofence,
   GeofenceData,
   GeofenceStatusResult,
 } from '../types/geofencing';
 import type { ApiResponse, PaginatedResponse } from '../types/common';
-import { loadMapplsGeofenceWidget } from '../mappls/loaders';
 
-const unsupported = (): never => {
-  throw new Error(
-    'Mappls geofencing CRUD is not part of the public mappls-map-react-native SDK. Use loadMapplsGeofenceWidget() for the official UI widget or integrate the separate InTouch APIs on your backend.'
-  );
-};
-
-export class GeofencingApi {
-  loadWidget() {
-    return loadMapplsGeofenceWidget();
+export class GeofencingApi extends BaseApi {
+  async create(geofenceData: GeofenceData): Promise<ApiResponse<Geofence>> {
+    this.requireAccessToken('GeofencingApi.create');
+    if (this.provider === 'mappls') {
+      throw new Error(
+        'Mappls geofencing CRUD is not part of the public Mappls REST API. Use the dedicated InTouch APIs on your backend.'
+      );
+    }
+    const response = await this.request<Geofence>('/geofencing/v1/fences', {
+      method: 'POST',
+      body: geofenceData,
+    });
+    return { status: 'ok', data: response };
   }
 
-  async create(_geofenceData: GeofenceData): Promise<ApiResponse<Geofence>> {
-    return unsupported();
-  }
-
-  async getById(_fenceId: string): Promise<ApiResponse<Geofence>> {
-    return unsupported();
+  async getById(fenceId: string): Promise<ApiResponse<Geofence>> {
+    this.requireAccessToken('GeofencingApi.getById');
+    if (this.provider === 'mappls') {
+      throw new Error(
+        'Mappls geofencing CRUD is not part of the public Mappls REST API.'
+      );
+    }
+    const response = await this.request<Geofence>(
+      `/geofencing/v1/fences/${fenceId}`
+    );
+    return { status: 'ok', data: response };
   }
 
   async update(
-    _fenceId: string,
-    _data: Partial<GeofenceData>
+    fenceId: string,
+    data: Partial<GeofenceData>
   ): Promise<ApiResponse<Geofence>> {
-    return unsupported();
+    this.requireAccessToken('GeofencingApi.update');
+    if (this.provider === 'mappls') {
+      throw new Error(
+        'Mappls geofencing CRUD is not part of the public Mappls REST API.'
+      );
+    }
+    const response = await this.request<Geofence>(
+      `/geofencing/v1/fences/${fenceId}`,
+      {
+        method: 'PUT',
+        body: data,
+      }
+    );
+    return { status: 'ok', data: response };
   }
 
-  async deleteById(_fenceId: string): Promise<ApiResponse<void>> {
-    return unsupported();
+  async deleteById(fenceId: string): Promise<ApiResponse<void>> {
+    this.requireAccessToken('GeofencingApi.deleteById');
+    if (this.provider === 'mappls') {
+      throw new Error(
+        'Mappls geofencing CRUD is not part of the public Mappls REST API.'
+      );
+    }
+    await this.request<void>(`/geofencing/v1/fences/${fenceId}`, {
+      method: 'DELETE',
+    });
+    return { status: 'ok', data: undefined };
   }
 
   async list(
-    _projectId: string,
-    _page?: number,
-    _limit?: number
+    projectId: string,
+    page?: number,
+    limit?: number
   ): Promise<PaginatedResponse<Geofence[]>> {
-    return unsupported();
+    this.requireAccessToken('GeofencingApi.list');
+    if (this.provider === 'mappls') {
+      throw new Error(
+        'Mappls geofencing CRUD is not part of the public Mappls REST API.'
+      );
+    }
+    const response = await this.request<{
+      fences: Geofence[];
+      total?: number;
+    }>('/geofencing/v1/fences', {
+      params: { project_id: projectId, page, limit },
+    });
+    return {
+      status: 'ok',
+      data: response.fences,
+      total: response.total,
+      page,
+      limit,
+    };
   }
 
   async checkStatus(
-    _fenceId: string,
-    _location: { lat: number; lng: number }
+    fenceId: string,
+    location: { lat: number; lng: number }
   ): Promise<ApiResponse<GeofenceStatusResult>> {
-    return unsupported();
+    this.requireAccessToken('GeofencingApi.checkStatus');
+    if (this.provider === 'mappls') {
+      throw new Error(
+        'Mappls geofencing CRUD is not part of the public Mappls REST API.'
+      );
+    }
+    const response = await this.request<GeofenceStatusResult>(
+      `/geofencing/v1/fences/${fenceId}/status`,
+      {
+        params: { lat: location.lat, lng: location.lng },
+      }
+    );
+    return { status: 'ok', data: response };
   }
 }

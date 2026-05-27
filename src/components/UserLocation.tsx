@@ -1,13 +1,9 @@
-import { loadMapplsMapSdk } from '../mappls/loaders';
+import MapLibreGL from '@maplibre/maplibre-react-native';
 
 export type GeolocationPosition = Record<string, unknown>;
 
 export function UserLocation(props: Record<string, unknown>) {
-  const sdk = loadMapplsMapSdk() as {
-    UserLocation: React.ComponentType<Record<string, unknown>>;
-  };
-  const UserLocationComponent = sdk.UserLocation;
-  return <UserLocationComponent {...props} />;
+  return <MapLibreGL.UserLocation {...props} />;
 }
 
 export function NativeUserLocation(props: Record<string, unknown>) {

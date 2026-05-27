@@ -1,30 +1,63 @@
 # `<MapView />` Component API
 
-`MapView` wraps the official `mappls-map-react-native` `MapView` component.
+`MapView` wraps `@maplibre/maplibre-react-native` MapView with Ola Maps vector tile styles.
 
 ## Props
 
-| Prop            | Type              | Notes                                             |
-| --------------- | ----------------- | ------------------------------------------------- |
-| `accessToken`   | `string`          | Optional REST token for this package's HTTP APIs. |
-| `apiKey`        | `string`          | Alias for `accessToken`.                          |
-| `client`        | `IndiaMapsClient` | Optional preconfigured client.                    |
-| `styleName`     | `string`          | Native Mappls style name.                         |
-| `initialRegion` | `InitialRegion`   | `{ latitude, longitude, zoomLevel }`.             |
-| `initialCenter` | `[lng, lat]`      | Initial center coordinate.                        |
-| `initialZoom`   | `number`          | Initial zoom level.                               |
-| `cameraProps`   | `object`          | Passed to the native Mappls `Camera`.             |
+| Prop | Type | Notes |
+| --- | --- | --- |
+| `accessToken` | `string` | Mappls access token (if using Mappls provider). |
+| `apiKey` | `string` | Ola Maps API key (default provider). |
+| `client` | `IndiaMapsClient` | Optional preconfigured client. |
+| `styleName` | `MapStyle` | Ola Maps style name (e.g. `default-light-standard`). |
+| `initialRegion` | `InitialRegion` | `{ latitude, longitude, zoomLevel }`. |
+| `initialCenter` | `[lng, lat]` | Initial center coordinate (GeoJSON order). |
+| `initialZoom` | `number` | Initial zoom level. |
+| `cameraProps` | `object` | Passed to MapLibre `Camera` component. |
+| `style` | `object` | React Native view style. |
+| `onMapReady` | `() => void` | Called when map finishes loading. |
+| `onRegionDidChange` | `(event) => void` | Called when the visible region changes. |
 
 ## Example
 
 ```tsx
+import { MapView, Marker, Polyline } from 'react-native-india-maps';
+
 <MapView
   style={{ flex: 1 }}
-  styleName="standard"
+  styleName="default-light-standard"
   initialRegion={{ latitude: 28.6139, longitude: 77.209, zoomLevel: 12 }}
-/>
+>
+  <Marker id="delhi" coordinate={{ latitude: 28.6139, longitude: 77.209 }} />
+  <Polyline
+    id="route"
+    coordinates={[
+      [77.209, 28.6139],
+      [77.22, 28.62],
+    ]}
+    lineColor="#007AFF"
+    lineWidth={3}
+  />
+</MapView>
 ```
 
-## Important
+## How it works
 
-Mappls does not publish public MapLibre style URLs, so this package uses the official native SDK for map rendering instead of `@maplibre/maplibre-react-native`.
+- The `MapView` component uses `@maplibre/maplibre-react-native` for rendering
+- Style URLs are constructed from Ola Maps tile endpoints: `https://api.olamaps.io/tiles/vector/v1/styles/{styleName}/style.json`
+- The API key is injected via the style URL query parameter
+- No proprietary native SDKs are required
+
+## Available styles
+
+See `MapStyle` type for all options. Common ones:
+
+- `default-light-standard` — Light theme, standard detail
+- `default-dark-standard` — Dark theme, standard detail
+- `default-light-lite` — Light theme, minimal detail
+- `default-dark-lite` — Dark theme, minimal detail
+- `default-light-full` — Light theme, full detail
+- `eclipse-light-standard` — Eclipse theme, light
+- `eclipse-dark-standard` — Eclipse theme, dark
+- `bolt-light` — Bolt theme, light
+- `bolt-dark` — Bolt theme, dark

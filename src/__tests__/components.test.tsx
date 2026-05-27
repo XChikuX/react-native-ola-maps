@@ -8,7 +8,7 @@ import {
 } from '../index';
 
 describe('React components', () => {
-  it('renders MapView with the Mappls SDK wrapper', () => {
+  it('renders MapView with MapLibre', () => {
     let renderer: TestRenderer.ReactTestRenderer | undefined;
 
     act(() => {

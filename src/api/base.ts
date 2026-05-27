@@ -1,7 +1,7 @@
 import { IndiaMapsError } from '../errors';
 import { VERSION } from '../version';
-import type { IndiaMapsConfig } from '../types/common';
-import { resolveAccessToken } from '../types/common';
+import type { IndiaMapsConfig, MapProvider } from '../types/common';
+import { resolveAccessToken, resolveBaseUrl } from '../types/common';
 
 type ParamValue = string | number | boolean | undefined | null;
 
@@ -11,13 +11,10 @@ export type RequestOptions = Omit<RequestInit, 'body'> & {
   skipJsonSerialization?: boolean;
 };
 
-const DEFAULT_SEARCH_BASE_URL = 'https://search.mappls.com';
-const DEFAULT_ROUTE_BASE_URL = 'https://route.mappls.com';
-const DEFAULT_SDK_BASE_URL = 'https://sdk.mappls.com';
-const DEFAULT_TILE_BASE_URL = 'https://tile.mappls.com';
-
 export class BaseApi {
   protected readonly accessToken?: string;
+  protected readonly baseUrl: string;
+  protected readonly provider: MapProvider;
   protected readonly searchBaseUrl: string;
   protected readonly routeBaseUrl: string;
   protected readonly sdkBaseUrl: string;
@@ -25,10 +22,24 @@ export class BaseApi {
 
   constructor(config: IndiaMapsConfig) {
     this.accessToken = resolveAccessToken(config);
-    this.searchBaseUrl = config.searchBaseUrl ?? DEFAULT_SEARCH_BASE_URL;
-    this.routeBaseUrl = config.routeBaseUrl ?? DEFAULT_ROUTE_BASE_URL;
-    this.sdkBaseUrl = config.sdkBaseUrl ?? DEFAULT_SDK_BASE_URL;
-    this.tileBaseUrl = config.tileBaseUrl ?? DEFAULT_TILE_BASE_URL;
+    this.provider = config.provider ?? 'ola';
+    this.baseUrl = resolveBaseUrl(config);
+    this.searchBaseUrl =
+      config.searchBaseUrl ??
+      (this.provider === 'mappls'
+        ? 'https://atlas.mappls.com'
+        : 'https://api.olamaps.io');
+    this.routeBaseUrl =
+      config.routeBaseUrl ??
+      (this.provider === 'mappls'
+        ? 'https://apis.mappls.com'
+        : 'https://api.olamaps.io');
+    this.sdkBaseUrl = config.sdkBaseUrl ?? 'https://api.olamaps.io';
+    this.tileBaseUrl =
+      config.tileBaseUrl ??
+      (this.provider === 'mappls'
+        ? 'https://tile.mappls.com'
+        : 'https://api.olamaps.io');
   }
 
   protected requireAccessToken(feature: string) {
@@ -48,11 +59,13 @@ export class BaseApi {
   ): URL {
     const rawUrl = path.startsWith('http')
       ? path
-      : `${opts?.baseUrl ?? this.searchBaseUrl}${path}`;
+      : `${opts?.baseUrl ?? this.baseUrl}${path}`;
     const url = new URL(rawUrl);
 
     if (opts?.includeAccessToken !== false && this.accessToken) {
-      url.searchParams.set('access_token', this.accessToken);
+      const tokenParam =
+        this.provider === 'mappls' ? 'access_token' : 'api_key';
+      url.searchParams.set(tokenParam, this.accessToken);
     }
 
     if (params) {

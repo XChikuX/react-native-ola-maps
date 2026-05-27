@@ -1,6 +1,5 @@
-import type { ComponentType } from 'react';
 import { useMemo } from 'react';
-import { loadMapplsMapSdk } from '../mappls/loaders';
+import MapLibreGL from '@maplibre/maplibre-react-native';
 import type { LatLng, LatLngLiteral, LngLat } from '../types/common';
 import { toLngLat } from '../types/common';
 
@@ -37,14 +36,6 @@ export function Polygon({
   fillLayerProps,
   lineLayerProps,
 }: PolygonProps) {
-  const sdk = loadMapplsMapSdk() as {
-    ShapeSource: ComponentType<Record<string, unknown>>;
-    FillLayer: ComponentType<Record<string, unknown>>;
-    LineLayer: ComponentType<Record<string, unknown>>;
-  };
-  const ShapeSource = sdk.ShapeSource;
-  const FillLayer = sdk.FillLayer;
-  const LineLayer = sdk.LineLayer;
   const ring = useMemo(
     () =>
       closeRing(
@@ -68,17 +59,17 @@ export function Polygon({
   );
 
   return (
-    <ShapeSource id={`${id}-source`} shape={feature}>
-      <FillLayer
+    <MapLibreGL.ShapeSource id={`${id}-source`} shape={feature}>
+      <MapLibreGL.FillLayer
         id={`${id}-fill`}
         style={{ fillColor, fillOpacity }}
         {...fillLayerProps}
       />
-      <LineLayer
+      <MapLibreGL.LineLayer
         id={`${id}-stroke`}
         style={{ lineColor: strokeColor, lineWidth: strokeWidth }}
         {...lineLayerProps}
       />
-    </ShapeSource>
+    </MapLibreGL.ShapeSource>
   );
 }

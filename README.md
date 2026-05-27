@@ -1,24 +1,23 @@
 # react-native-india-maps
 
-A React Native SDK for India Maps built around the official Mappls (MapMyIndia) SDK, official Mappls REST APIs, and Expo config plugins.
+A React Native SDK for India Maps powered by **MapLibre** for rendering and supporting both **Ola Maps** and **Mappls** API backends.
 
-## What changed
+## Features
 
-- Package name is now `react-native-india-maps`
-- Native map rendering now uses the official `mappls-map-react-native` SDK
-- Expo development builds are supported through a config plugin in this package
-- Mappls styles cannot be rendered directly through `@maplibre/maplibre-react-native` because Mappls does not publish public MapLibre style URLs
+- 🗺️ Map rendering via `@maplibre/maplibre-react-native` (no proprietary native SDKs)
+- 🔄 Dual-provider: Ola Maps (default) and Mappls backends
+- 📍 Full Places API (autocomplete, geocode, reverse geocode, nearby, text search)
+- 🛣️ Routing API (directions, distance matrix, route optimizer)
+- 🛤️ Roads API (snap to road, nearest roads, speed limits)
+- 🏔️ Elevation API
+- 📐 Geofencing API (Ola Maps only)
+- 🎨 Multiple map styles (light, dark, satellite, and more)
+- ⚡ Expo config plugin for location permissions
 
 ## Install
 
 ```sh
-bun add react-native-india-maps mappls-map-react-native
-```
-
-If you also need official Mappls widgets, install the ones you use:
-
-```sh
-bun add mappls-direction-widget-react-native mappls-geofence-widget-react-native mappls-nearby-widget-react-native mappls-search-widgets-react-native mappls-tracking-react-native mappls-polyline
+bun add react-native-india-maps @maplibre/maplibre-react-native
 ```
 
 ## Expo setup
@@ -32,8 +31,6 @@ Use an Expo development build, not Expo Go.
       [
         "react-native-india-maps",
         {
-          "androidConfigFilesDir": "./mappls/android",
-          "iosConfigFilesDir": "./mappls/ios",
           "iosWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location while using the app.",
           "backgroundLocation": false
         }
@@ -43,7 +40,7 @@ Use an Expo development build, not Expo Go.
 }
 ```
 
-The plugin adds location permissions and automates the main native setup required by the official Mappls SDK. Your app must still provide the real `.conf` and `.olf` files downloaded from the Mappls auth console.
+The plugin adds location permissions for both Android and iOS. No native SDK configuration files are needed — MapLibre handles all map rendering.
 
 ## Provider and hooks
 
@@ -56,7 +53,11 @@ import {
   useAutocomplete,
 } from 'react-native-india-maps';
 
-const client = new IndiaMapsClient({ accessToken: 'YOUR_MAPPLS_REST_TOKEN' });
+// Ola Maps (default provider)
+const client = new IndiaMapsClient({ apiKey: 'YOUR_OLA_MAPS_API_KEY' });
+
+// Or Mappls provider
+// const client = new IndiaMapsClient({ accessToken: 'YOUR_MAPPLS_TOKEN', provider: 'mappls' });
 
 function SearchBox() {
   const { results, debouncedSearch } = useAutocomplete({ debounceMs: 300 });
@@ -68,7 +69,7 @@ export function App() {
     <IndiaMapsProvider client={client}>
       <MapView
         style={{ flex: 1 }}
-        styleName="standard"
+        styleName="default-light-standard"
         initialRegion={{ latitude: 28.6139, longitude: 77.209, zoomLevel: 12 }}
       >
         <Marker
@@ -82,46 +83,76 @@ export function App() {
 }
 ```
 
-## Official SDK access
+## Dual-provider support
 
-This package exposes loaders for the official Mappls packages instead of guessing their public component shapes:
+The SDK supports two backends:
 
-- `loadMapplsMapSdk()`
-- `loadMapplsDirectionWidget()`
-- `loadMapplsGeofenceWidget()`
-- `loadMapplsNearbyWidget()`
-- `loadMapplsSearchWidgets()`
-- `loadMapplsTrackingSdk()`
-- `loadMapplsPolyline()`
+| Feature | Ola Maps | Mappls |
+| --- | --- | --- |
+| Auth param | `api_key` | `access_token` |
+| Base URL | `https://api.olamaps.io` | `https://atlas.mappls.com` |
+| Map tiles | ✅ Vector tiles | ❌ Not public |
+| Geofencing | ✅ | ❌ Not public |
 
-You can also access them from `client.sdk`.
+```ts
+// Ola Maps (default)
+const olaClient = new IndiaMapsClient({ apiKey: 'YOUR_KEY' });
+
+// Mappls
+const mapplsClient = new IndiaMapsClient({
+  accessToken: 'YOUR_TOKEN',
+  provider: 'mappls',
+});
+```
 
 ## API coverage
 
-### Native Mappls SDK-backed
+### Places
 
-- Auto suggest
+- Autocomplete / Autosuggest
 - Geocode
-- Reverse geocode
-- Place detail
-- Nearby search
-- Directions
-- Distance matrix
-- POI along route
-- Official native map rendering and widgets
+- Reverse Geocode
+- Place Details
+- Nearby Search
+- Text Search
 
-### Direct HTTP integrations for public APIs not exposed by the RN SDK
+### Routing
 
-- Elevation: `https://sdk.mappls.com/map/utils/elevation`
-- Route optimization: `https://route.mappls.com/route/optimization/...`
-- Snap to road v2: `https://route.mappls.com/routev2/movement/trace_route`
-- Still map images: `https://tile.mappls.com/map/raster_tile/still_image`
+- Directions (driving, walking, biking)
+- Distance Matrix
+- Route Optimizer
+
+### Roads
+
+- Snap to Road
+- Nearest Roads
+- Speed Limits
+
+### Elevation
+
+- Single point elevation
+- Multi-point elevation
+
+### Geofencing (Ola Maps only)
+
+- Create / Read / Update / Delete geofences
+- Check point status (inside/outside)
+
+### Tiles
+
+- Vector tile style URLs for MapLibre
+- Static map image URLs
+- Request transform helper for API key injection
+
+## Map styles
+
+Available Ola Maps styles: `default-light-standard`, `default-dark-standard`, `default-light-lite`, `default-dark-lite`, `default-light-full`, `default-dark-full`, `eclipse-light-standard`, `eclipse-dark-standard`, `bolt-light`, `bolt-dark`, `vintage-light`, `vintage-dark`, and more.
 
 ## Notes
 
-- `accessToken` is used for direct REST calls in this package
-- The native Mappls SDK itself authenticates with platform-specific `.conf` and `.olf` files
-- Legacy `OlaMapsClient`, `OlaMapsProvider`, and `useOlaMaps` aliases are still exported for compatibility
+- `apiKey` is used for Ola Maps API authentication
+- `accessToken` is used for Mappls API authentication
+- Legacy `OlaMapsClient`, `OlaMapsProvider`, and `useOlaMaps` aliases are exported for compatibility
 
 ## License
 

@@ -1,7 +1,7 @@
 {
   "name": "react-native-india-maps",
-  "version": "0.2.0",
-  "description": "React Native SDK for India Maps with Mappls (MapMyIndia) APIs, native SDK support, and Expo config plugins",
+  "version": "0.3.0",
+  "description": "React Native SDK for India Maps using MapLibre GL with Ola Maps and Mappls (MapMyIndia) APIs",
   "source": "./src/index.ts",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",
@@ -41,6 +41,8 @@
     "react-native",
     "expo",
     "india-maps",
+    "maplibre",
+    "ola-maps",
     "mappls",
     "mapmyindia",
     "maps",
@@ -91,7 +93,7 @@
     "@types/react": "^18.2.44"
   },
   "peerDependencies": {
-    "mappls-map-react-native": "^2.0.2",
+    "@maplibre/maplibre-react-native": ">=10.0.0-alpha.1",
     "react": ">=19.1.0",
     "react-native": ">=0.80.0"
   },
@@ -188,26 +190,8 @@
   },
   "types": "./lib/typescript/commonjs/src/index.d.ts",
   "peerDependenciesMeta": {
-    "mappls-map-react-native": {
-      "optional": true
-    },
-    "mappls-direction-widget-react-native": {
-      "optional": true
-    },
-    "mappls-geofence-widget-react-native": {
-      "optional": true
-    },
-    "mappls-nearby-widget-react-native": {
-      "optional": true
-    },
-    "mappls-polyline": {
-      "optional": true
-    },
-    "mappls-search-widgets-react-native": {
-      "optional": true
-    },
-    "mappls-tracking-react-native": {
-      "optional": true
+    "@maplibre/maplibre-react-native": {
+      "optional": false
     }
   }
 }
