@@ -1,7 +1,7 @@
 # Installation
 
 ```sh
-npm install react-native-ola-maps @maplibre/maplibre-react-native
+bun add react-native-ola-maps @maplibre/maplibre-react-native
 ```
 
 Map components are powered by `@maplibre/maplibre-react-native` v11. Follow the MapLibre React Native installation steps for your app, including Expo config plugin setup if applicable.

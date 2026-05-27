@@ -77,6 +77,6 @@ bun run typecheck
 
 ## Dependencies
 
-- `@maplibre/maplibre-react-native` ^11.0.0 — Map rendering
-- `react` >= 18.0.0 — Peer dependency
-- `react-native` >= 0.73.0 — Peer dependency
+- `@maplibre/maplibre-react-native` ^11.2.1 — Map rendering
+- `react` >= 19.1.0 — Peer dependency
+- `react-native` >= 0.80.0 — Peer dependency

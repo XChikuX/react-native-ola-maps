@@ -9,7 +9,7 @@ A modern React Native SDK for Ola Maps with:
 ## Installation
 
 ```sh
-npm install react-native-ola-maps @maplibre/maplibre-react-native
+bun add react-native-ola-maps @maplibre/maplibre-react-native
 ```
 
 Map components use `@maplibre/maplibre-react-native` v11, which requires React Native New Architecture, React `>=19.1.0`, and React Native `>=0.80.0`.
