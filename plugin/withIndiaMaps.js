@@ -17,8 +17,8 @@ const MAPPLS_CLASSPATH =
 const MAPPLS_PLUGIN = 'id("com.mappls.services.android")';
 const DEFAULT_IOS_MESSAGE =
   'Allow $(PRODUCT_NAME) to access your location while using the app.';
-const DEFAULT_ANDROID_FILES = ['a.conf', 'a.olf'];
-const DEFAULT_IOS_FILES = ['i.conf', 'i.olf'];
+const ANDROID_AUTH_FILE_SUFFIXES = ['a.conf', 'a.olf'];
+const IOS_AUTH_FILE_SUFFIXES = ['i.conf', 'i.olf'];
 
 const ensureContains = (source, fragment) =>
   source.includes(fragment) ? source : `${source}\n${fragment}`;
@@ -125,7 +125,9 @@ const withMapplsNativeSetup = (config, options) => {
 
       if (fs.existsSync(sourceDir)) {
         for (const file of fs.readdirSync(sourceDir)) {
-          if (DEFAULT_ANDROID_FILES.some((suffix) => file.endsWith(suffix))) {
+          if (
+            ANDROID_AUTH_FILE_SUFFIXES.some((suffix) => file.endsWith(suffix))
+          ) {
             fs.copyFileSync(
               path.join(sourceDir, file),
               path.join(targetDir, file)
@@ -153,7 +155,7 @@ const withMapplsNativeSetup = (config, options) => {
 
       if (fs.existsSync(sourceDir)) {
         for (const file of fs.readdirSync(sourceDir)) {
-          if (DEFAULT_IOS_FILES.some((suffix) => file.endsWith(suffix))) {
+          if (IOS_AUTH_FILE_SUFFIXES.some((suffix) => file.endsWith(suffix))) {
             fs.copyFileSync(
               path.join(sourceDir, file),
               path.join(targetDir, file)

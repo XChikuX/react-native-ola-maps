@@ -189,7 +189,7 @@
   "types": "./lib/typescript/commonjs/src/index.d.ts",
   "peerDependenciesMeta": {
     "mappls-map-react-native": {
-      "optional": false
+      "optional": true
     },
     "mappls-direction-widget-react-native": {
       "optional": true
