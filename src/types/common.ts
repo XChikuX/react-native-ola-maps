@@ -1,102 +1,97 @@
+/**
+ * Geographic coordinate in latitude/longitude order, matching React Native
+ * and React Native Maps conventions.
+ *
+ * @see {@linkcode MapView}
+ */
 export type LatLng = {
   latitude: number;
   longitude: number;
 };
 
+/**
+ * GeoJSON-order coordinate tuple: `[longitude, latitude]`. This is the order
+ * used by MapLibre and by provider routing path segments.
+ */
 export type LngLat = [longitude: number, latitude: number];
 
+/**
+ * Compact `{ lat, lng }` literal, the order used by most provider payloads.
+ */
 export type LatLngLiteral = {
   lat: number;
   lng: number;
 };
 
+/**
+ * Comma-separated `"latitude,longitude"` string, e.g. `"12.9716,77.5946"`,
+ * as accepted by provider query parameters.
+ */
 export type LatLngString = `${number},${number}`;
 
-export type Language = 'en' | 'hi' | string;
+/**
+ * Any coordinate representation accepted by the SDK. Methods normalize all
+ * forms internally, so callers can pass whichever shape is convenient.
+ *
+ * @see {@linkcode PlacesApi.autocomplete}
+ * @see {@linkcode RoutingApi.getDirections}
+ */
+export type LatLngInput = LatLng | LatLngLiteral | LngLat | LatLngString;
 
-export type ApiResponse<T> = {
-  status: string;
-  data: T;
-  error?: string;
-};
+/**
+ * IETF/BCP-47 language tag accepted by endpoints that support localization,
+ * e.g. `'en'`, `'hi'`, `'ta-IN'`. Availability depends on the provider.
+ */
+export type Language = string;
 
-export type PaginatedResponse<T> = ApiResponse<T> & {
-  total?: number;
-  page?: number;
-  limit?: number;
-};
-
+/**
+ * Map data backend used for API requests and tile styles.
+ *
+ * - `'ola'` — Ola Maps (default). Full API coverage including geofencing and
+ *   vector tile styles.
+ * - `'mappls'` — Mappls. Places, routing, roads and elevation coverage;
+ *   geofencing and public tile styles are not available.
+ */
 export type MapProvider = 'ola' | 'mappls';
 
+/**
+ * Configuration for `IndiaMapsClient`.
+ *
+ * At least one credential is required for API calls: pass `apiKey` for Ola
+ * Maps (the default provider) or `accessToken` with `provider: 'mappls'` for
+ * Mappls. Map rendering itself works without credentials for Ola Maps only
+ * when a style URL is provided externally.
+ *
+ * @see {@linkcode IndiaMapsClient}
+ */
 export type IndiaMapsConfig = {
+  /**
+   * Mappls access token. Also accepted as a generic alias for `apiKey` when
+   * only one credential field is desired.
+   */
   accessToken?: string;
+
+  /** Ola Maps API key. */
   apiKey?: string;
+
+  /** Backend provider. @default 'ola' */
   provider?: MapProvider;
+
+  /** Overrides the default base URL for search and geocoding endpoints. */
   baseUrl?: string;
+
+  /** Overrides the default base URL for places/search endpoints. */
   searchBaseUrl?: string;
+
+  /** Overrides the default base URL for routing, elevation and roads endpoints. */
   routeBaseUrl?: string;
+
+  /** Overrides the default base URL for Ola Maps SDK-only endpoints (geofencing). */
   sdkBaseUrl?: string;
+
+  /** Overrides the default base URL for tile style endpoints. */
   tileBaseUrl?: string;
 };
 
+/** @deprecated Use {@linkcode IndiaMapsConfig}. Kept for backwards compatibility. */
 export type OlaMapsConfig = IndiaMapsConfig;
-
-export const resolveAccessToken = (config: IndiaMapsConfig) =>
-  config.accessToken ?? config.apiKey;
-
-export const resolveBaseUrl = (config: IndiaMapsConfig): string => {
-  if (config.baseUrl) {
-    return config.baseUrl;
-  }
-  return config.provider === 'mappls'
-    ? 'https://atlas.mappls.com'
-    : 'https://api.olamaps.io';
-};
-
-export const toLatLngString = (
-  location: LatLng | LatLngLiteral | LatLngString
-): LatLngString => {
-  if (typeof location === 'string') {
-    return location;
-  }
-
-  if ('latitude' in location) {
-    return `${location.latitude},${location.longitude}`;
-  }
-
-  return `${location.lat},${location.lng}`;
-};
-
-export const toLngLat = (
-  location: LatLng | LatLngLiteral | LatLngString
-): LngLat => {
-  if (typeof location === 'string') {
-    const [lat, lng] = location.split(',').map(Number);
-    return [lng ?? 0, lat ?? 0];
-  }
-
-  if ('latitude' in location) {
-    return [location.longitude, location.latitude];
-  }
-
-  return [location.lng, location.lat];
-};
-
-export const toMapplsCoordinateString = (
-  location: LatLng | LatLngLiteral | LatLngString | LngLat
-) => {
-  if (Array.isArray(location)) {
-    return `${location[0]},${location[1]}`;
-  }
-
-  if (typeof location === 'string') {
-    const [lat, lng] = location.split(',');
-    return `${lng},${lat}`;
-  }
-
-  if ('latitude' in location) {
-    return `${location.longitude},${location.latitude}`;
-  }
-
-  return `${location.lng},${location.lat}`;
-};

@@ -25,13 +25,24 @@ describe('TilesApi', () => {
       zoom: 12,
       width: 600,
       height: 400,
-      format: 'png',
       markers: ['12.9,77.6'],
     });
 
     expect(url).toContain('/tiles/v1/styles/default/static');
     expect(url).toContain('center=12.9%2C77.6');
     expect(url).toContain('api_key=test-token');
+  });
+
+  it('accepts coordinates as markers', () => {
+    const url = tiles.getStaticMapURL({
+      center: [77.6, 12.9],
+      zoom: 12,
+      width: 600,
+      height: 400,
+      markers: [{ latitude: 12.9, longitude: 77.6 }],
+    });
+
+    expect(url).toContain('markers=12.9%2C77.6');
   });
 
   it('builds Mappls static map URLs', () => {
@@ -44,13 +55,24 @@ describe('TilesApi', () => {
       zoom: 12,
       width: 600,
       height: 400,
-      format: 'png',
       markers: ['12.9,77.6'],
     });
 
     expect(url).toContain('/map/raster_tile/still_image');
     expect(url).toContain('center=12.9%2C77.6');
     expect(url).toContain('access_token=test-token');
+  });
+
+  it('throws a configuration error without a token', () => {
+    const anonymousTiles = new TilesApi();
+    expect(() =>
+      anonymousTiles.getStaticMapURL({
+        center: [77.6, 12.9],
+        zoom: 12,
+        width: 600,
+        height: 400,
+      })
+    ).toThrowError(expect.objectContaining({ code: 'CONFIGURATION_ERROR' }));
   });
 
   it('returns v11-compatible map options', () => {

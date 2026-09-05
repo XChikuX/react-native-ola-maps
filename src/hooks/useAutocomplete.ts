@@ -1,14 +1,29 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useIndiaMaps } from './useIndiaMaps';
-import type { AutocompleteOptions, AutocompleteResult } from '../types/places';
+import type {
+  AutocompleteOptions,
+  AutocompleteSuggestion,
+} from '../types/places';
 
-export function useAutocomplete(
-  options?: AutocompleteOptions & { debounceMs?: number }
-) {
+/** Options for {@linkcode useAutocomplete}: autocomplete options plus debounce. */
+export type UseAutocompleteOptions = AutocompleteOptions & {
+  /** Delay in milliseconds before a debounced search fires. @default 250 */
+  debounceMs?: number;
+};
+
+/**
+ * Autocomplete search state with debouncing, backed by
+ * {@linkcode PlacesApi.autocomplete}.
+ *
+ * @example
+ * const { results, debouncedSearch } = useAutocomplete({ debounceMs: 300 });
+ * debouncedSearch('koram');
+ */
+export function useAutocomplete(options?: UseAutocompleteOptions) {
   const client = useIndiaMaps();
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<AutocompleteResult[]>([]);
+  const [results, setResults] = useState<AutocompleteSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | undefined>();
 
@@ -23,9 +38,9 @@ export function useAutocomplete(
       setLoading(true);
       setError(undefined);
       try {
-        const response = await client.places.autocomplete(input, options);
-        setResults(response.data);
-        return response.data;
+        const suggestions = await client.places.autocomplete(input, options);
+        setResults(suggestions);
+        return suggestions;
       } catch (searchError) {
         const normalizedError =
           searchError instanceof Error

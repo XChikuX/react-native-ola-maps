@@ -1,8 +1,11 @@
 export { useIndiaMaps } from './useIndiaMaps';
 export { useOlaMaps } from './useOlaMaps';
 export { useAutocomplete } from './useAutocomplete';
+export type { UseAutocompleteOptions } from './useAutocomplete';
 export { useDirections } from './useDirections';
+export type { UseDirectionsArgs } from './useDirections';
 export { useReverseGeocode } from './useReverseGeocode';
+export type { UseReverseGeocodeArgs } from './useReverseGeocode';
 export { useGeofencing } from './useGeofencing';
 export { useAsyncRequest } from './useAsyncRequest';
-export type { AsyncState } from './useAsyncRequest';
+export type { AsyncState, AsyncRequestOptions } from './useAsyncRequest';

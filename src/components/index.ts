@@ -13,4 +13,8 @@ export type { PolygonProps } from './Polygon';
 export { Callout } from './Callout';
 export type { CalloutProps } from './Callout';
 export { UserLocation, NativeUserLocation } from './UserLocation';
-export type { GeolocationPosition } from './UserLocation';
+export type {
+  UserLocationProps,
+  NativeUserLocationProps,
+  GeolocationPosition,
+} from './UserLocation';

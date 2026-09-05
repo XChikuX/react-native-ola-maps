@@ -1,22 +1,28 @@
-import type { IndiaMapsConfig } from '../types/common';
-import { resolveAccessToken } from '../types/common';
+import { IndiaMapsError } from '../errors';
+import { resolveAccessToken } from '../utils/config';
+import { toLatLngString } from '../utils/coordinates';
+import type { IndiaMapsConfig, MapProvider } from '../types/common';
 import type {
   MapOptions,
-  MapStyle,
+  StaticMapMarker,
   StaticMapOptions,
   TransformRequest,
 } from '../types/tiles';
 
 const OLA_TILE_BASE_URL = 'https://api.olamaps.io';
 const MAPPLS_TILE_BASE_URL = 'https://tile.mappls.com';
-const DEFAULT_STYLE: MapStyle = 'default-light-standard';
+const DEFAULT_STYLE = 'default-light-standard';
 
+/**
+ * Tiles API: MapLibre style URLs, static map image URLs, and a request
+ * transformer that injects credentials into tile requests.
+ */
 export class TilesApi {
   private readonly accessToken?: string;
   private readonly tileBaseUrl: string;
-  private readonly provider: 'ola' | 'mappls';
+  private readonly provider: MapProvider;
 
-  constructor(config: IndiaMapsConfig) {
+  constructor(config: IndiaMapsConfig = {}) {
     this.accessToken = resolveAccessToken(config);
     this.provider = config.provider ?? 'ola';
     this.tileBaseUrl =
@@ -24,16 +30,16 @@ export class TilesApi {
       (this.provider === 'mappls' ? MAPPLS_TILE_BASE_URL : OLA_TILE_BASE_URL);
   }
 
-  getStyleName(styleName?: MapStyle): string {
+  /** Returns the effective style identifier. @default 'default-light-standard' */
+  getStyleName(styleName?: string): string {
     return styleName ?? DEFAULT_STYLE;
   }
 
   /**
-   * Returns a MapLibre-compatible style URL for the given style name.
-   * For Ola Maps: https://api.olamaps.io/tiles/vector/v1/styles/{style}/style.json
-   * For Mappls: returns the style name (Mappls uses native SDK rendering)
+   * Returns a MapLibre style URL with the credential embedded for Ola Maps.
+   * For Mappls (no public vector styles) this returns the style name itself.
    */
-  getStyleURL(styleName?: MapStyle): string {
+  getStyleURL(styleName?: string): string {
     const style = this.getStyleName(styleName);
     if (this.provider === 'mappls') {
       return style;
@@ -49,8 +55,8 @@ export class TilesApi {
   }
 
   /**
-   * Returns a transform request function that appends the API key
-   * to all Ola Maps tile requests.
+   * Returns a transform request function that appends the API key to Ola Maps
+   * tile requests. Pass it to MapLibre's `transformRequest` map option.
    */
   getTransformRequest(): (url: string) => TransformRequest {
     const apiKey = this.accessToken;
@@ -64,6 +70,7 @@ export class TilesApi {
     };
   }
 
+  /** Returns a full MapLibre map configuration. */
   getMapOptions(options?: MapOptions): {
     mapStyle: string;
     center?: [number, number];
@@ -80,43 +87,52 @@ export class TilesApi {
     };
   }
 
+  /**
+   * Returns a static map image URL.
+   *
+   * @throws {@linkcode IndiaMapsError} with code `'CONFIGURATION_ERROR'` when
+   * no credential is configured.
+   */
   getStaticMapURL(options: StaticMapOptions): string {
-    if (!this.accessToken) {
-      throw new Error(
-        'TilesApi.getStaticMapURL requires accessToken (or apiKey alias) in IndiaMapsClient config.'
+    const accessToken = this.accessToken;
+    if (accessToken === undefined) {
+      throw new IndiaMapsError(
+        'TilesApi.getStaticMapURL requires accessToken (or apiKey alias) in IndiaMapsClient config.',
+        'CONFIGURATION_ERROR'
       );
     }
 
     if (this.provider === 'mappls') {
-      return this.getMapplsStaticMapURL(options);
+      return this.getMapplsStaticMapURL(options, accessToken);
     }
 
-    return this.getOlaStaticMapURL(options);
+    return this.getOlaStaticMapURL(options, accessToken);
   }
 
-  private getOlaStaticMapURL(options: StaticMapOptions): string {
-    const center = 'center' in options ? options.center : undefined;
-    if (!center) {
-      throw new Error('Static map API requires a center coordinate.');
-    }
+  private getOlaStaticMapURL(
+    options: StaticMapOptions,
+    accessToken: string
+  ): string {
     const url = new URL('/tiles/v1/styles/default/static', this.tileBaseUrl);
-    url.searchParams.set('center', `${center[1]},${center[0]}`);
+    url.searchParams.set('center', `${options.center[1]},${options.center[0]}`);
     url.searchParams.set('zoom', String(options.zoom));
     url.searchParams.set('size', `${options.width}x${options.height}`);
     if (options.markers?.length) {
-      url.searchParams.set('markers', options.markers.join('|'));
+      url.searchParams.set(
+        'markers',
+        options.markers.map(toMarkerString).join('|')
+      );
     }
-    url.searchParams.set('api_key', this.accessToken!);
+    url.searchParams.set('api_key', accessToken);
     return url.toString();
   }
 
-  private getMapplsStaticMapURL(options: StaticMapOptions): string {
-    const center = 'center' in options ? options.center : undefined;
-    if (!center) {
-      throw new Error('Static map API requires a center coordinate.');
-    }
+  private getMapplsStaticMapURL(
+    options: StaticMapOptions,
+    accessToken: string
+  ): string {
     const url = new URL('/map/raster_tile/still_image', this.tileBaseUrl);
-    url.searchParams.set('center', `${center[1]},${center[0]}`);
+    url.searchParams.set('center', `${options.center[1]},${options.center[0]}`);
     url.searchParams.set('zoom', String(options.zoom));
     url.searchParams.set('size', `${options.width}x${options.height}`);
     url.searchParams.set(
@@ -124,12 +140,15 @@ export class TilesApi {
       options.scaleFactor ? String(options.scaleFactor) : '1'
     );
     options.markers?.forEach((marker) =>
-      url.searchParams.append('markers', marker)
+      url.searchParams.append('markers', toMarkerString(marker))
     );
     if (options.markerIcon) {
       url.searchParams.set('markers_icon', options.markerIcon);
     }
-    url.searchParams.set('access_token', this.accessToken!);
+    url.searchParams.set('access_token', accessToken);
     return url.toString();
   }
 }
+
+const toMarkerString = (marker: StaticMapMarker): string =>
+  typeof marker === 'string' ? marker : toLatLngString(marker);

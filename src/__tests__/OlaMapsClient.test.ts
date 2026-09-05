@@ -13,7 +13,7 @@ describe('IndiaMapsClient', () => {
     expect(IndiaMapsClient.VERSION).toBe(VERSION);
   });
 
-  it('allows native-sdk-only usage without an access token', () => {
+  it('allows map-only usage without an access token', () => {
     expect(() => new IndiaMapsClient()).not.toThrow(IndiaMapsError);
   });
 });

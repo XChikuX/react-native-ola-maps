@@ -6,10 +6,10 @@ bun add react-native-india-maps @maplibre/maplibre-react-native@^11.0.0
 
 ## Requirements
 
-- React `>=19.1.0`
-- React Native `>=0.80.0`
+- React `>=19.2.0`
+- React Native `>=0.83.0`
 - `@maplibre/maplibre-react-native` `>=11.0.0`
-- Expo development build or bare React Native app
+- Expo SDK 55+ development build or bare React Native app
 - React Native New Architecture enabled
 - Ola Maps API key or Mappls access token
 

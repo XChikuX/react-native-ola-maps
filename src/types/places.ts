@@ -1,62 +1,203 @@
-import type { Language, LatLng } from './common';
+import type { Language, LatLngInput, LatLngLiteral } from './common';
 
+/** Options accepted by {@linkcode PlacesApi.autocomplete}. */
 export type AutocompleteOptions = {
-  location?: LatLng;
+  /** Biases results toward this coordinate. */
+  location?: LatLngInput;
+
+  /** Bias radius in meters (Ola Maps). */
   radius?: number;
-  strictbounds?: boolean;
+
+  /** Restricts results to the bias radius (Ola Maps). */
+  strictBounds?: boolean;
+
+  /** Response language. */
   language?: Language;
+
+  /** Restricts results to a provider-specific place type, e.g. `'restaurant'`. */
   types?: string;
+
+  /** Mappls zoom-level bias (4–18). */
   zoom?: number;
+
+  /** Mappls: ranks hyper-local results higher; requires `location`. */
   hyperLocal?: boolean;
+
+  /**
+   * Mappls result filter, e.g. `'pin:110055'`,
+   * `'bounds:lat1,lng1;lat2,lng2'` or `'cop:{eLoc}'`.
+   */
   filter?: string;
+
+  /**
+   * Mappls place type code restricting results:
+   * `'SLC'`, `'LC'`, `'CITY'`, `'VLG'`, `'SDIST'`, `'DIST'`, `'STATE'`, `'SSLC'`.
+   */
   pod?: string;
+
+  /** Mappls: returns structured address tokens in results. */
   tokenizeAddress?: boolean;
 };
 
-export type AutocompleteResult = Record<string, unknown> & {
-  mapplsPin?: string;
-  placeName?: string;
-  placeAddress?: string;
+/**
+ * A provider-normalized autocomplete suggestion returned by
+ * {@linkcode PlacesApi.autocomplete}, {@linkcode PlacesApi.nearbySearch} and
+ * {@linkcode PlacesApi.textSearch}.
+ */
+export type AutocompleteSuggestion = {
+  /**
+   * Stable place identifier: an Ola Maps `place_id` or a Mappls
+   * eLoc/`mapplsPin`. Pass it to {@linkcode PlacesApi.placeDetails}.
+   */
+  placeId: string;
+
+  /** Primary display name of the place. */
+  name: string;
+
+  /** Secondary address text, when the provider returns one. */
+  address?: string;
+
+  /** Distance in meters from the bias location, when reported. */
+  distanceMeters?: number;
+
+  /** Result coordinate, when the provider includes one. */
+  location?: LatLngLiteral;
+
+  /** Provider result categories, when returned. */
+  types?: string[];
 };
 
-export type GeocodeResult = Record<string, unknown>;
+/** Options accepted by {@linkcode PlacesApi.geocode}. */
+export type GeocodeOptions = {
+  /** Response language. */
+  language?: Language;
+};
 
+/**
+ * A provider-normalized geocoding result returned by
+ * {@linkcode PlacesApi.geocode} and {@linkcode PlacesApi.addressValidation}.
+ */
+export type GeocodeResult = {
+  /** Stable place identifier, when the provider returns one. */
+  placeId?: string;
+
+  /** Human-readable formatted address. */
+  formattedAddress?: string;
+
+  /** Resolved coordinate. */
+  location?: LatLngLiteral;
+};
+
+/** Options accepted by {@linkcode PlacesApi.reverseGeocode}. */
+export type ReverseGeocodeOptions = {
+  /** Response language. */
+  language?: Language;
+};
+
+/**
+ * A provider-normalized reverse-geocoding result returned by
+ * {@linkcode PlacesApi.reverseGeocode}.
+ */
 export type ReverseGeocodeResult = GeocodeResult;
 
-export type PlaceDetails = Record<string, unknown>;
-
-export type NearbySearchOptions = {
-  radius?: number;
-  types?: string;
-  rankBy?: 'prominence' | 'distance';
-  rankby?: 'prominence' | 'distance';
+/** Options accepted by {@linkcode PlacesApi.placeDetails}. */
+export type PlaceDetailsOptions = {
+  /** Response language. */
   language?: Language;
-  limit?: number;
-  layers?: string;
-  strictbounds?: boolean;
-  withCentroid?: boolean;
-  page?: number;
-  bounds?: string;
-  filter?: string;
-  richData?: boolean;
-  sortBy?: string;
-  userName?: string;
-  keyword?: string;
 };
 
-export type NearbySearchResult = Record<string, unknown>;
+/**
+ * Provider-normalized place details returned by
+ * {@linkcode PlacesApi.placeDetails}.
+ */
+export type PlaceDetails = {
+  /** Stable place identifier. */
+  placeId?: string;
 
-export type TextSearchOptions = {
-  location?: LatLng;
+  /** Primary display name of the place. */
+  name?: string;
+
+  /** Human-readable formatted address. */
+  formattedAddress?: string;
+
+  /** Place coordinate. */
+  location?: LatLngLiteral;
+};
+
+/** Options accepted by {@linkcode PlacesApi.nearbySearch}. */
+export type NearbySearchOptions = {
+  /** Search radius in meters (Ola Maps). */
   radius?: number;
-  language?: Language;
+
+  /** Free-text keyword, e.g. `'coffee'` (used by Mappls). */
+  keyword?: string;
+
+  /** Restricts results to a provider-specific place type (Ola Maps). */
   types?: string;
-  size?: number;
-  zoom?: number;
-  hyperLocal?: boolean;
+
+  /** Result ranking. @default 'prominence' */
+  rankBy?: 'prominence' | 'distance';
+
+  /** Response language. */
+  language?: Language;
+
+  /** Mappls: page number, 10 results per page. */
+  page?: number;
+
+  /** Mappls bounds filter: `'lat1,lng1;lat2,lng2'`. */
+  bounds?: string;
+
+  /**
+   * Mappls result filter, e.g. `'pin:110055'` or
+   * `'bounds:lat1,lng1;lat2,lng2'`.
+   */
   filter?: string;
+
+  /** Mappls: includes rich data in results. */
+  richData?: boolean;
+
+  /** Mappls sort order, e.g. `'dist'`. */
+  sortBy?: string;
+};
+
+/**
+ * A provider-normalized nearby place returned by
+ * {@linkcode PlacesApi.nearbySearch}.
+ */
+export type NearbySearchResult = AutocompleteSuggestion;
+
+/** Options accepted by {@linkcode PlacesApi.textSearch}. */
+export type TextSearchOptions = {
+  /** Biases results toward this coordinate. */
+  location?: LatLngInput;
+
+  /** Bias radius in meters (Ola Maps). */
+  radius?: number;
+
+  /** Response language. */
+  language?: Language;
+
+  /** Restricts results to a provider-specific place type. */
+  types?: string;
+
+  /** Mappls zoom-level bias (4–18). */
+  zoom?: number;
+
+  /** Mappls: ranks hyper-local results higher; requires `location`. */
+  hyperLocal?: boolean;
+
+  /** Mappls result filter. */
+  filter?: string;
+
+  /** Mappls place type code. */
   pod?: string;
+
+  /** Mappls: returns structured address tokens in results. */
   tokenizeAddress?: boolean;
 };
 
-export type TextSearchResult = NearbySearchResult;
+/**
+ * A provider-normalized text-search result returned by
+ * {@linkcode PlacesApi.textSearch}.
+ */
+export type TextSearchResult = AutocompleteSuggestion;

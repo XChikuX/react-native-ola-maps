@@ -1,1 +1,2 @@
-export const VERSION = '0.2.0';
+/** Version of the react-native-india-maps SDK, mirrored in package.json. */
+export const VERSION = '0.3.0';

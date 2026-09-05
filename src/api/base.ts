@@ -1,16 +1,27 @@
 import { IndiaMapsError } from '../errors';
 import { VERSION } from '../version';
+import { resolveAccessToken, resolveBaseUrl } from '../utils/config';
 import type { IndiaMapsConfig, MapProvider } from '../types/common';
-import { resolveAccessToken, resolveBaseUrl } from '../types/common';
 
 type ParamValue = string | number | boolean | undefined | null;
 
+/** Options for a single HTTP request performed by an API module. */
 export type RequestOptions = Omit<RequestInit, 'body'> & {
+  /** Query parameters; `undefined` and `null` values are omitted. */
   params?: Record<string, ParamValue>;
+
+  /** Request body; plain objects and arrays are JSON-serialized. */
   body?: BodyInit | Record<string, unknown> | unknown[];
+
+  /** Set when the body is already a serialized string. */
   skipJsonSerialization?: boolean;
 };
 
+/**
+ * Shared HTTP plumbing for every API module: URL building with provider
+ * authentication, JSON serialization, and normalized {@linkcode IndiaMapsError}
+ * reporting. Not part of the public API.
+ */
 export class BaseApi {
   protected readonly accessToken?: string;
   protected readonly baseUrl: string;
@@ -42,7 +53,13 @@ export class BaseApi {
         : 'https://api.olamaps.io');
   }
 
-  protected requireAccessToken(feature: string) {
+  /**
+   * Returns the configured access token.
+   *
+   * @throws {@linkcode IndiaMapsError} with code `'CONFIGURATION_ERROR'` when
+   * no token is configured.
+   */
+  protected requireAccessToken(feature: string): string {
     if (!this.accessToken) {
       throw new IndiaMapsError(
         `${feature} requires accessToken (or apiKey alias) in IndiaMapsClient config.`,
@@ -70,7 +87,7 @@ export class BaseApi {
 
     if (params) {
       for (const [key, value] of Object.entries(params)) {
-        if (value != null) {
+        if (value !== undefined && value !== null) {
           url.searchParams.set(key, String(value));
         }
       }
@@ -79,6 +96,13 @@ export class BaseApi {
     return url;
   }
 
+  /**
+   * Performs an HTTP request against a provider endpoint and returns the
+   * parsed JSON (or text) body.
+   *
+   * @throws {@linkcode IndiaMapsError} with code `'API_ERROR'` for non-2xx
+   * responses, or `'NETWORK_ERROR'` when the request fails before a response.
+   */
   protected async request<T>(
     path: string,
     options?: RequestOptions,

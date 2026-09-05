@@ -1,31 +1,62 @@
 import { useMemo } from 'react';
+import type { ComponentProps } from 'react';
 import { GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
-import type { LatLng, LatLngLiteral, LngLat } from '../types/common';
-import { toLngLat } from '../types/common';
+import type { LatLngInput, LngLat } from '../types/common';
+import { toLngLat } from '../utils/coordinates';
 
+type LayerProps = ComponentProps<typeof Layer>;
+
+/** Style-spec layer props (the `paint`/`layout` variant, not legacy `style`). */
+type StyleSpecLayerProps = Extract<LayerProps, { style?: never }>;
+type FillLayerSpec = Extract<StyleSpecLayerProps, { type: 'fill' }>;
+type LineLayerSpec = Extract<StyleSpecLayerProps, { type: 'line' }>;
+
+/** Props for {@linkcode Polygon}. */
 export type PolygonProps = {
+  /** Layer identifier. @default 'india-polygon' */
   id?: string;
-  coordinates: Array<LatLng | LatLngLiteral | LngLat>;
+
+  /** Ring vertices in any accepted coordinate format; closed automatically. */
+  coordinates: LatLngInput[];
+
+  /** Fill color. @default '#2563eb' */
   fillColor?: string;
+
+  /** Fill opacity between 0 and 1. @default 0.25 */
   fillOpacity?: number;
+
+  /** Stroke color. @default '#2563eb' */
   strokeColor?: string;
+
+  /** Stroke width in points. @default 2 */
   strokeWidth?: number;
-  fillLayerProps?: Record<string, unknown>;
-  lineLayerProps?: Record<string, unknown>;
+
+  /** Extra props merged onto the underlying MapLibre fill layer. */
+  fillLayerProps?: Omit<FillLayerSpec, 'id' | 'type' | 'source'>;
+
+  /** Extra props merged onto the underlying MapLibre line layer. */
+  lineLayerProps?: Omit<LineLayerSpec, 'id' | 'type' | 'source'>;
 };
 
+/** Closes the ring so the first and last vertices match, as GeoJSON requires. */
 const closeRing = (coordinates: LngLat[]): LngLat[] => {
   if (coordinates.length === 0) {
     return coordinates;
   }
   const first = coordinates[0];
   const last = coordinates[coordinates.length - 1];
-  if (first?.[0] === last?.[0] && first?.[1] === last?.[1]) {
+  if (first && last && first[0] === last[0] && first[1] === last[1]) {
     return coordinates;
   }
   return [...coordinates, first as LngLat];
 };
 
+/**
+ * Filled, stroked polygon overlay rendered through a GeoJSON source.
+ *
+ * @example
+ * <Polygon id="area" coordinates={[[77.59, 12.97], [77.6, 12.98], [77.59, 12.98]]} />
+ */
 export function Polygon({
   id = 'india-polygon',
   coordinates,
@@ -37,12 +68,7 @@ export function Polygon({
   lineLayerProps,
 }: PolygonProps) {
   const ring = useMemo(
-    () =>
-      closeRing(
-        coordinates.map((coordinate) =>
-          Array.isArray(coordinate) ? coordinate : toLngLat(coordinate)
-        )
-      ),
+    () => closeRing(coordinates.map(toLngLat)),
     [coordinates]
   );
 

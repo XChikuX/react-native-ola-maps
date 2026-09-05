@@ -1,5 +1,3 @@
-export { BaseApi } from './base';
-export type { RequestOptions } from './base';
 export { PlacesApi } from './places';
 export { RoutingApi } from './routing';
 export { RoadsApi } from './roads';

@@ -1,228 +1,309 @@
 import { BaseApi } from './base';
+import { IndiaMapsError } from '../errors';
+import {
+  arrayOf,
+  asLngLat,
+  asMetric,
+  asNumber,
+  asString,
+  type Raw,
+} from '../utils/parse';
+import { joinLngLat } from '../utils/coordinates';
 import type {
   DirectionsOptions,
   DirectionsResult,
   DistanceMatrixOptions,
   DistanceMatrixResult,
+  FleetPlannerInput,
+  FleetPlannerResult,
+  FleetPlannerStrategy,
+  OverviewLevel,
+  Route,
   RouteOptimizerOptions,
   RouteOptimizerResult,
-  FleetPlannerInput,
-  FleetPlannerStrategy,
-  FleetPlannerResult,
+  Waypoint,
 } from '../types/routing';
-import type { ApiResponse, LatLngString } from '../types/common';
+import type { LatLngInput } from '../types/common';
 
-const ok = <T>(data: T): ApiResponse<T> => ({ status: 'ok', data });
+const normalizeRoute = (raw: Raw): Route => ({
+  distance: asMetric(raw.distance),
+  duration: asMetric(raw.duration),
+  geometry: asString(raw.geometry),
+  legs: arrayOf(raw.legs).map((leg) => ({
+    distance: asMetric(leg.distance),
+    duration: asMetric(leg.duration),
+    summary: asString(leg.summary),
+    steps: arrayOf(leg.steps).map((step) => ({
+      distance: asMetric(step.distance),
+      duration: asMetric(step.duration),
+      name: asString(step.name),
+      ref: asString(step.ref),
+      maneuver: asString(step.maneuver),
+      location: asLngLat(step.location),
+      geometry: asString(step.geometry),
+    })),
+  })),
+});
 
-const toLngLatString = (value: LatLngString): string => {
-  const [lat, lng] = value.split(',');
-  return `${lng},${lat}`;
-};
+const normalizeWaypoint = (raw: Raw): Waypoint => ({
+  location: asLngLat(raw.location ?? raw.snapped_location),
+  distance: asNumber(raw.distance),
+  name: asString(raw.name),
+});
 
-const joinCoordinates = (locations: LatLngString[], separator = ';') =>
-  locations.map(toLngLatString).join(separator);
+const toNumberGrid = (grid: unknown): number[][] | undefined =>
+  Array.isArray(grid)
+    ? grid.map((row) =>
+        Array.isArray(row) ? row.map((cell) => asMetric(cell) ?? 0) : []
+      )
+    : undefined;
 
+/**
+ * Routing API: directions, distance matrix and route optimization across
+ * Ola Maps and Mappls.
+ */
 export class RoutingApi extends BaseApi {
+  /**
+   * Returns routes from `origin` to `destination`, optionally through
+   * `waypoints`.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, network or API failure.
+   */
   async getDirections(
-    origin: LatLngString,
-    destination: LatLngString,
+    origin: LatLngInput,
+    destination: LatLngInput,
     options?: DirectionsOptions
-  ): Promise<ApiResponse<DirectionsResult>> {
+  ): Promise<DirectionsResult> {
     this.requireAccessToken('RoutingApi.getDirections');
-    if (this.provider === 'mappls') {
-      return this.mapplsDirections(origin, destination, options);
-    }
-    return this.olaDirections(origin, destination, options);
-  }
-
-  async getDirectionsBasic(
-    origin: LatLngString,
-    destination: LatLngString,
-    options?: Omit<DirectionsOptions, 'traffic_metadata'>
-  ): Promise<ApiResponse<DirectionsResult>> {
-    return this.getDirections(
-      origin,
-      destination,
-      options as DirectionsOptions
-    );
-  }
-
-  async getDistanceMatrix(
-    origins: LatLngString[],
-    destinations: LatLngString[],
-    options?: DistanceMatrixOptions
-  ): Promise<ApiResponse<DistanceMatrixResult>> {
-    this.requireAccessToken('RoutingApi.getDistanceMatrix');
-    if (this.provider === 'mappls') {
-      return this.mapplsDistanceMatrix(origins, destinations, options);
-    }
-    return this.olaDistanceMatrix(origins, destinations, options);
-  }
-
-  async getDistanceMatrixBasic(
-    origins: LatLngString[],
-    destinations: LatLngString[],
-    options?: DistanceMatrixOptions
-  ): Promise<ApiResponse<DistanceMatrixResult>> {
-    return this.getDistanceMatrix(origins, destinations, options);
-  }
-
-  async routeOptimizer(
-    locations: LatLngString[],
-    options?: RouteOptimizerOptions
-  ): Promise<ApiResponse<RouteOptimizerResult>> {
-    this.requireAccessToken('RoutingApi.routeOptimizer');
-    if (this.provider === 'mappls') {
-      return this.mapplsRouteOptimizer(locations, options);
-    }
-    return this.olaRouteOptimizer(locations, options);
-  }
-
-  async fleetPlanner(
-    _inputData: FleetPlannerInput,
-    _strategy: FleetPlannerStrategy
-  ): Promise<ApiResponse<FleetPlannerResult>> {
-    throw new Error(
-      'Fleet planner is not available as a public REST API. Use a dedicated fleet management backend.'
-    );
-  }
-
-  // --- Ola Maps implementations ---
-
-  private async olaDirections(
-    origin: LatLngString,
-    destination: LatLngString,
-    options?: DirectionsOptions
-  ): Promise<ApiResponse<DirectionsResult>> {
     const coords = [origin, ...(options?.waypoints ?? []), destination];
-    const geopositions = joinCoordinates(coords);
+    const geopositions = joinLngLat(coords);
     const mode = options?.mode ?? 'driving';
-    const response = await this.request<DirectionsResult>(
+
+    if (this.provider === 'mappls') {
+      const resource = options?.trafficMetadata
+        ? 'route_traffic'
+        : (options?.resource ?? 'route');
+      const response = await this.request<Raw>(
+        `/advancedmaps/v1/${this.accessToken}/direction/${resource}/${mode}/${geopositions}`,
+        {
+          params: {
+            alternatives: options?.alternatives,
+            steps: options?.steps,
+            overview: serializeOverview(options?.overview),
+            geometries: options?.geometries,
+          },
+        },
+        { baseUrl: this.routeBaseUrl, includeAccessToken: false }
+      );
+      return normalizeDirections(response);
+    }
+
+    const response = await this.request<Raw>(
       `/routing/v1/directions/${mode}/${geopositions}`,
       {
         params: {
           alternatives: options?.alternatives,
           steps: options?.steps,
-          overview: options?.overview,
+          overview: serializeOverview(options?.overview),
           geometries: options?.geometries,
-          traffic_metadata: options?.traffic_metadata,
+          traffic_metadata: options?.trafficMetadata,
+          route_preference: options?.routePreference,
+          language: options?.language,
         },
       }
     );
-    return ok(response);
+    return normalizeDirections(response);
   }
 
-  private async olaDistanceMatrix(
-    origins: LatLngString[],
-    destinations: LatLngString[],
+  /**
+   * @deprecated Use {@linkcode RoutingApi.getDirections}.
+   */
+  async getDirectionsBasic(
+    origin: LatLngInput,
+    destination: LatLngInput,
+    options?: Omit<DirectionsOptions, 'trafficMetadata'>
+  ): Promise<DirectionsResult> {
+    return this.getDirections(origin, destination, options);
+  }
+
+  /**
+   * Returns travel distance and duration grids from every origin to every
+   * destination.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, network or API failure.
+   */
+  async getDistanceMatrix(
+    origins: LatLngInput[],
+    destinations: LatLngInput[],
     options?: DistanceMatrixOptions
-  ): Promise<ApiResponse<DistanceMatrixResult>> {
+  ): Promise<DistanceMatrixResult> {
+    this.requireAccessToken('RoutingApi.getDistanceMatrix');
     const mode = options?.mode ?? 'driving';
-    const response = await this.request<DistanceMatrixResult>(
+
+    if (this.provider === 'mappls') {
+      const resource = options?.resource ?? 'distance_matrix';
+      const geopositions = joinLngLat([...origins, ...destinations]);
+      const response = await this.request<Raw>(
+        `/advancedmaps/v1/${this.accessToken}/${resource}/${mode}/${geopositions}`,
+        {
+          params: {
+            sources: origins.map((_, index) => index).join(';'),
+            destinations: origins
+              .map((_, index) => index + origins.length)
+              .join(';'),
+          },
+        },
+        { baseUrl: this.routeBaseUrl, includeAccessToken: false }
+      );
+      return normalizeDistanceMatrix(response);
+    }
+
+    const response = await this.request<Raw>(
       `/routing/v1/distanceMatrix/${mode}`,
       {
         params: {
-          origins: origins.map(toLngLatString).join('|'),
-          destinations: destinations.map(toLngLatString).join('|'),
+          origins: joinLngLat(origins, '|'),
+          destinations: joinLngLat(destinations, '|'),
+          route_preference: options?.routePreference,
+          language: options?.language,
         },
       }
     );
-    return ok(response);
+    return normalizeDistanceMatrix(response);
   }
 
-  private async olaRouteOptimizer(
-    locations: LatLngString[],
+  /**
+   * @deprecated Use {@linkcode RoutingApi.getDistanceMatrix}.
+   */
+  async getDistanceMatrixBasic(
+    origins: LatLngInput[],
+    destinations: LatLngInput[],
+    options?: DistanceMatrixOptions
+  ): Promise<DistanceMatrixResult> {
+    return this.getDistanceMatrix(origins, destinations, options);
+  }
+
+  /**
+   * Optimizes the visiting order of `locations`.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, network or API failure.
+   */
+  async routeOptimizer(
+    locations: LatLngInput[],
     options?: RouteOptimizerOptions
-  ): Promise<ApiResponse<RouteOptimizerResult>> {
+  ): Promise<RouteOptimizerResult> {
+    this.requireAccessToken('RoutingApi.routeOptimizer');
     const mode = options?.mode ?? 'driving';
-    const geopositions = joinCoordinates(locations);
-    const response = await this.request<RouteOptimizerResult>(
+    const geopositions = joinLngLat(locations);
+
+    if (this.provider === 'mappls') {
+      const resource = options?.resource ?? 'trip_optimization_eta';
+      const response = await this.request<Raw>(
+        `/advancedmaps/v1/${this.accessToken}/${resource}/${mode}/${geopositions}`,
+        {
+          params: {
+            source: options?.source,
+            destination: options?.destination,
+            roundtrip: options?.roundTrip,
+            steps: options?.steps,
+            overview: serializeOverview(options?.overview),
+          },
+        },
+        { baseUrl: this.routeBaseUrl, includeAccessToken: false }
+      );
+      return normalizeRouteOptimizer(response);
+    }
+
+    const response = await this.request<Raw>(
       `/routing/v1/routeOptimizer/${mode}/${geopositions}`,
       {
         params: {
           source: options?.source,
           destination: options?.destination,
-          roundtrip: options?.roundTrip ?? options?.roundtrip,
+          roundtrip: options?.roundTrip,
           steps: options?.steps,
-          overview: options?.overview,
+          overview: serializeOverview(options?.overview),
+          traffic_metadata: options?.trafficMetadata,
+          route_preference: options?.routePreference,
+          language: options?.language,
         },
       }
     );
-    return ok(response);
+    return normalizeRouteOptimizer(response);
   }
 
-  // --- Mappls implementations ---
-
-  private async mapplsDirections(
-    origin: LatLngString,
-    destination: LatLngString,
-    options?: DirectionsOptions
-  ): Promise<ApiResponse<DirectionsResult>> {
-    const coords = [origin, ...(options?.waypoints ?? []), destination];
-    const geopositions = joinCoordinates(coords);
-    const mode = options?.mode ?? 'driving';
-    const resource = options?.traffic_metadata
-      ? 'route_traffic'
-      : (options?.resource ?? 'route');
-    const response = await this.request<DirectionsResult>(
-      `/advancedmaps/v1/${this.accessToken}/direction/${resource}/${mode}/${geopositions}`,
-      {
-        params: {
-          alternatives: options?.alternatives,
-          steps: options?.steps,
-          overview: options?.overview,
-          geometries: options?.geometries,
-        },
-      },
-      { baseUrl: this.routeBaseUrl, includeAccessToken: false }
+  /**
+   * Not available: fleet planning has no public provider REST API.
+   *
+   * @throws {@linkcode IndiaMapsError} with code `'UNSUPPORTED_ERROR'` always.
+   * Use a dedicated fleet-management backend instead.
+   */
+  async fleetPlanner(
+    _inputData: FleetPlannerInput,
+    _strategy: FleetPlannerStrategy
+  ): Promise<FleetPlannerResult> {
+    throw new IndiaMapsError(
+      'Fleet planner is not available as a public REST API. Use a dedicated fleet management backend.',
+      'UNSUPPORTED_ERROR'
     );
-    return ok(response);
-  }
-
-  private async mapplsDistanceMatrix(
-    origins: LatLngString[],
-    destinations: LatLngString[],
-    options?: DistanceMatrixOptions
-  ): Promise<ApiResponse<DistanceMatrixResult>> {
-    const allCoords = [...origins, ...destinations];
-    const geopositions = joinCoordinates(allCoords);
-    const mode = options?.mode ?? 'driving';
-    const resource = options?.resource ?? 'distance_matrix';
-    const response = await this.request<DistanceMatrixResult>(
-      `/advancedmaps/v1/${this.accessToken}/${resource}/${mode}/${geopositions}`,
-      {
-        params: {
-          sources: origins.map((_, i) => i).join(';'),
-          destinations: origins.map((_, i) => i + origins.length).join(';'),
-        },
-      },
-      { baseUrl: this.routeBaseUrl, includeAccessToken: false }
-    );
-    return ok(response);
-  }
-
-  private async mapplsRouteOptimizer(
-    locations: LatLngString[],
-    options?: RouteOptimizerOptions
-  ): Promise<ApiResponse<RouteOptimizerResult>> {
-    const resource = options?.traffic_metadata
-      ? 'trip_optimization_traffic'
-      : (options?.resource ?? 'trip_optimization_eta');
-    const mode = options?.mode ?? 'driving';
-    const geopositions = joinCoordinates(locations);
-    const response = await this.request<RouteOptimizerResult>(
-      `/advancedmaps/v1/${this.accessToken}/${resource}/${mode}/${geopositions}`,
-      {
-        params: {
-          source: options?.source,
-          destination: options?.destination,
-          roundtrip: options?.roundTrip ?? options?.roundtrip,
-          steps: options?.steps,
-          overview: options?.overview,
-        },
-      },
-      { baseUrl: this.routeBaseUrl, includeAccessToken: false }
-    );
-    return ok(response);
   }
 }
+
+const serializeOverview = (overview?: OverviewLevel): string | boolean =>
+  overview === undefined ? true : overview;
+
+const normalizeDirections = (response: unknown): DirectionsResult => {
+  const raw = (response ?? {}) as Raw;
+  return {
+    code: asString(raw.code),
+    routes: arrayOf(raw.routes).map(normalizeRoute),
+    waypoints: arrayOf(raw.waypoints).map(normalizeWaypoint),
+  };
+};
+
+const normalizeDistanceMatrix = (response: unknown): DistanceMatrixResult => {
+  const raw = (response ?? {}) as Raw;
+  const matrix = (raw.matrix ?? {}) as Raw;
+  const rows = arrayOf(raw.distanceMatrix);
+
+  const fromGrids = (source: Raw): DistanceMatrixResult | undefined => {
+    const distances = toNumberGrid(source.distances);
+    const durations = toNumberGrid(source.durations);
+    if (distances === undefined || durations === undefined) {
+      return undefined;
+    }
+    return { distances, durations };
+  };
+
+  return (
+    // OSRM-style grids (Mappls distance_matrix and compatible responses).
+    fromGrids(raw) ??
+    fromGrids(matrix) ?? {
+      // Ola cell-based rows: distanceMatrix[].distanceMatrixCells[].
+      distances: rows.map((row) =>
+        arrayOf(row.distanceMatrixCells).map(
+          (cell) => asMetric(cell.distance) ?? 0
+        )
+      ),
+      durations: rows.map((row) =>
+        arrayOf(row.distanceMatrixCells).map(
+          (cell) => asMetric(cell.duration) ?? 0
+        )
+      ),
+    }
+  );
+};
+
+const normalizeRouteOptimizer = (response: unknown): RouteOptimizerResult => {
+  const raw = (response ?? {}) as Raw;
+  return {
+    code: asString(raw.code),
+    order: Array.isArray(raw.order)
+      ? raw.order.map((value) => asNumber(value) ?? 0)
+      : undefined,
+    routes: arrayOf(raw.routes ?? raw.trips).map(normalizeRoute),
+    waypoints: arrayOf(raw.waypoints).map(normalizeWaypoint),
+    distance: asMetric(raw.distance),
+    duration: asMetric(raw.duration),
+  };
+};

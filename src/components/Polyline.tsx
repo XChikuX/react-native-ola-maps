@@ -1,17 +1,44 @@
 import { useMemo } from 'react';
+import type { ComponentProps } from 'react';
 import { GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
-import type { LatLng, LatLngLiteral, LngLat } from '../types/common';
-import { toLngLat } from '../types/common';
+import type { LatLngInput } from '../types/common';
+import { toLngLat } from '../utils/coordinates';
 
+type LayerProps = ComponentProps<typeof Layer>;
+
+/** Style-spec line-layer props (the `paint`/`layout` variant, not legacy `style`). */
+type LineLayerSpec = Extract<
+  Extract<LayerProps, { style?: never }>,
+  { type: 'line' }
+>;
+
+/** Props for {@linkcode Polyline}. */
 export type PolylineProps = {
+  /** Layer identifier. @default 'india-polyline' */
   id?: string;
-  coordinates: Array<LatLng | LatLngLiteral | LngLat>;
+
+  /** Line vertices in any accepted coordinate format. */
+  coordinates: LatLngInput[];
+
+  /** Line color. @default '#2563eb' */
   color?: string;
+
+  /** Line width in points. @default 4 */
   width?: number;
+
+  /** Line opacity between 0 and 1. @default 1 */
   opacity?: number;
-  layerProps?: Record<string, unknown>;
+
+  /** Extra props merged onto the underlying MapLibre line layer. */
+  layerProps?: Omit<LineLayerSpec, 'id' | 'type' | 'source'>;
 };
 
+/**
+ * Polyline overlay rendered through a GeoJSON source and line layer.
+ *
+ * @example
+ * <Polyline id="route" coordinates={[[77.59, 12.97], [77.6, 12.98]]} />
+ */
 export function Polyline({
   id = 'india-polyline',
   coordinates,
@@ -26,9 +53,7 @@ export function Polyline({
       properties: {},
       geometry: {
         type: 'LineString',
-        coordinates: coordinates.map((coordinate) =>
-          Array.isArray(coordinate) ? coordinate : toLngLat(coordinate)
-        ),
+        coordinates: coordinates.map(toLngLat),
       },
     }),
     [coordinates]

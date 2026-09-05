@@ -1,114 +1,138 @@
 import { BaseApi } from './base';
+import { IndiaMapsError } from '../errors';
+import { arrayOf, asNumber, type Raw } from '../utils/parse';
 import type {
   Geofence,
   GeofenceData,
+  GeofencePage,
   GeofenceStatusResult,
 } from '../types/geofencing';
-import type { ApiResponse, PaginatedResponse } from '../types/common';
+import type { LatLngLiteral } from '../types/common';
 
+const unsupported = (feature: string): IndiaMapsError =>
+  new IndiaMapsError(
+    `${feature} is not part of the public Mappls REST API. Use the dedicated InTouch APIs on your backend.`,
+    'UNSUPPORTED_ERROR'
+  );
+
+/**
+ * Geofencing API: CRUD for circular and polygon geofences plus inside/outside
+ * checks. Ola Maps only — every method throws an {@linkcode IndiaMapsError}
+ * with code `'UNSUPPORTED_ERROR'` when the configured provider is Mappls.
+ */
 export class GeofencingApi extends BaseApi {
-  async create(geofenceData: GeofenceData): Promise<ApiResponse<Geofence>> {
+  /**
+   * Creates a geofence.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, provider, network or
+   * API failure.
+   */
+  async create(geofenceData: GeofenceData): Promise<Geofence> {
     this.requireAccessToken('GeofencingApi.create');
     if (this.provider === 'mappls') {
-      throw new Error(
-        'Mappls geofencing CRUD is not part of the public Mappls REST API. Use the dedicated InTouch APIs on your backend.'
-      );
+      throw unsupported('GeofencingApi.create');
     }
-    const response = await this.request<Geofence>('/geofencing/v1/fences', {
+    return this.request<Geofence>('/geofencing/v1/fences', {
       method: 'POST',
       body: geofenceData,
     });
-    return { status: 'ok', data: response };
   }
 
-  async getById(fenceId: string): Promise<ApiResponse<Geofence>> {
+  /**
+   * Returns a geofence by identifier.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, provider, network or
+   * API failure.
+   */
+  async getById(fenceId: string): Promise<Geofence> {
     this.requireAccessToken('GeofencingApi.getById');
     if (this.provider === 'mappls') {
-      throw new Error(
-        'Mappls geofencing CRUD is not part of the public Mappls REST API.'
-      );
+      throw unsupported('GeofencingApi.getById');
     }
-    const response = await this.request<Geofence>(
-      `/geofencing/v1/fences/${fenceId}`
-    );
-    return { status: 'ok', data: response };
+    return this.request<Geofence>(`/geofencing/v1/fences/${fenceId}`);
   }
 
+  /**
+   * Updates a geofence.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, provider, network or
+   * API failure.
+   */
   async update(
     fenceId: string,
     data: Partial<GeofenceData>
-  ): Promise<ApiResponse<Geofence>> {
+  ): Promise<Geofence> {
     this.requireAccessToken('GeofencingApi.update');
     if (this.provider === 'mappls') {
-      throw new Error(
-        'Mappls geofencing CRUD is not part of the public Mappls REST API.'
-      );
+      throw unsupported('GeofencingApi.update');
     }
-    const response = await this.request<Geofence>(
-      `/geofencing/v1/fences/${fenceId}`,
-      {
-        method: 'PUT',
-        body: data,
-      }
-    );
-    return { status: 'ok', data: response };
+    return this.request<Geofence>(`/geofencing/v1/fences/${fenceId}`, {
+      method: 'PUT',
+      body: data,
+    });
   }
 
-  async deleteById(fenceId: string): Promise<ApiResponse<void>> {
+  /**
+   * Deletes a geofence.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, provider, network or
+   * API failure.
+   */
+  async deleteById(fenceId: string): Promise<void> {
     this.requireAccessToken('GeofencingApi.deleteById');
     if (this.provider === 'mappls') {
-      throw new Error(
-        'Mappls geofencing CRUD is not part of the public Mappls REST API.'
-      );
+      throw unsupported('GeofencingApi.deleteById');
     }
     await this.request<void>(`/geofencing/v1/fences/${fenceId}`, {
       method: 'DELETE',
     });
-    return { status: 'ok', data: undefined };
   }
 
+  /**
+   * Returns one page of geofences for a project.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, provider, network or
+   * API failure.
+   */
   async list(
     projectId: string,
     page?: number,
     limit?: number
-  ): Promise<PaginatedResponse<Geofence[]>> {
+  ): Promise<GeofencePage> {
     this.requireAccessToken('GeofencingApi.list');
     if (this.provider === 'mappls') {
-      throw new Error(
-        'Mappls geofencing CRUD is not part of the public Mappls REST API.'
-      );
+      throw unsupported('GeofencingApi.list');
     }
-    const response = await this.request<{
-      fences: Geofence[];
-      total?: number;
-    }>('/geofencing/v1/fences', {
+    const response = await this.request<Raw>('/geofencing/v1/fences', {
       params: { project_id: projectId, page, limit },
     });
     return {
-      status: 'ok',
-      data: response.fences,
-      total: response.total,
+      fences: arrayOf(response.fences) as Geofence[],
+      total: asNumber(response.total),
       page,
       limit,
     };
   }
 
+  /**
+   * Checks whether a coordinate lies inside a geofence.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, provider, network or
+   * API failure.
+   */
   async checkStatus(
     fenceId: string,
-    location: { lat: number; lng: number }
-  ): Promise<ApiResponse<GeofenceStatusResult>> {
+    location: LatLngLiteral
+  ): Promise<GeofenceStatusResult> {
     this.requireAccessToken('GeofencingApi.checkStatus');
     if (this.provider === 'mappls') {
-      throw new Error(
-        'Mappls geofencing CRUD is not part of the public Mappls REST API.'
-      );
+      throw unsupported('GeofencingApi.checkStatus');
     }
-    const response = await this.request<GeofenceStatusResult>(
+    return this.request<GeofenceStatusResult>(
       `/geofencing/v1/fences/${fenceId}/status`,
       {
         params: { lat: location.lat, lng: location.lng },
       }
     );
-    return { status: 'ok', data: response };
   }
 }

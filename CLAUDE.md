@@ -34,7 +34,8 @@ bun run typecheck
 - **`src/components/`** — React Native components wrapping `@maplibre/maplibre-react-native`
 - **`src/hooks/`** — React hooks for API access and state management
 - **`src/providers/`** — React context providers for `IndiaMapsClient`
-- **`src/types/`** — Shared TypeScript types and MapLibre type declarations
+- **`src/types/`** — Shared TypeScript types (pure types only — no runtime helpers)
+- **`src/utils/`** — Internal runtime helpers (coordinate conversion, config resolution, response parsing); not part of the public API
 - **`plugin/`** — Expo config plugin for location permissions
 
 ## Conventions

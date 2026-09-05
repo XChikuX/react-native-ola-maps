@@ -1,306 +1,313 @@
 import { BaseApi } from './base';
+import {
+  arrayOf,
+  asNumber,
+  asString,
+  toLatLngLiteral,
+  type Raw,
+} from '../utils/parse';
+import { toLatLngString, toLngLat } from '../utils/coordinates';
 import type {
   AutocompleteOptions,
-  AutocompleteResult,
+  AutocompleteSuggestion,
+  GeocodeOptions,
   GeocodeResult,
-  ReverseGeocodeResult,
-  PlaceDetails,
   NearbySearchOptions,
   NearbySearchResult,
+  PlaceDetails,
+  PlaceDetailsOptions,
+  ReverseGeocodeOptions,
+  ReverseGeocodeResult,
   TextSearchOptions,
   TextSearchResult,
 } from '../types/places';
-import type { ApiResponse, Language, LatLngLiteral } from '../types/common';
-import { toLatLngString } from '../types/common';
+import type { LatLngInput } from '../types/common';
 
-const ok = <T>(data: T): ApiResponse<T> => ({ status: 'ok', data });
+/** Reads a property from a nested provider object, or `undefined`. */
+const rawAt = (value: unknown, key: string): unknown =>
+  value !== null && typeof value === 'object' ? (value as Raw)[key] : undefined;
 
+const normalizeSuggestion = (raw: Raw): AutocompleteSuggestion => ({
+  placeId:
+    asString(raw.place_id) ??
+    asString(raw.mapplsPin) ??
+    asString(raw.eLoc) ??
+    '',
+  name:
+    asString(rawAt(raw.structuredFormatting, 'mainText')) ??
+    asString(raw.description) ??
+    asString(raw.placeName) ??
+    '',
+  address:
+    asString(rawAt(raw.structuredFormatting, 'secondaryText')) ??
+    asString(raw.description) ??
+    asString(raw.placeAddress),
+  distanceMeters: asNumber(raw.distanceMeters ?? raw.distance),
+  location: toLatLngLiteral(
+    raw.latitude ?? rawAt(rawAt(raw.geometry, 'location'), 'lat'),
+    raw.longitude ?? rawAt(rawAt(raw.geometry, 'location'), 'lng')
+  ),
+  types: Array.isArray(raw.types)
+    ? raw.types.filter((type): type is string => typeof type === 'string')
+    : asString(raw.type) !== undefined
+      ? [asString(raw.type) as string]
+      : undefined,
+});
+
+const normalizePlace = (raw: Raw): GeocodeResult => ({
+  placeId:
+    asString(raw.place_id) ??
+    asString(raw.mapplsPin) ??
+    asString(raw.generatedId),
+  formattedAddress:
+    asString(raw.formatted_address) ??
+    asString(raw.formattedAddress) ??
+    asString(raw.placeAddress),
+  location: toLatLngLiteral(
+    rawAt(rawAt(raw.geometry, 'location'), 'lat') ?? raw.latitude,
+    rawAt(rawAt(raw.geometry, 'location'), 'lng') ?? raw.longitude
+  ),
+});
+
+const normalizePlaceDetails = (raw: Raw): PlaceDetails => ({
+  placeId:
+    asString(raw.place_id) ?? asString(raw.mapplsPin) ?? asString(raw.eLoc),
+  name: asString(raw.name) ?? asString(raw.placeName),
+  formattedAddress:
+    asString(raw.formatted_address) ??
+    asString(raw.formattedAddress) ??
+    asString(raw.placeAddress),
+  location: toLatLngLiteral(
+    rawAt(rawAt(raw.geometry, 'location'), 'lat') ?? raw.latitude,
+    rawAt(rawAt(raw.geometry, 'location'), 'lng') ?? raw.longitude
+  ),
+});
+
+/**
+ * Places API: autocomplete, geocoding, reverse geocoding, place details,
+ * nearby search and text search — with provider-normalized results.
+ */
 export class PlacesApi extends BaseApi {
+  /**
+   * Returns place suggestions for a partial query.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, network or API failure.
+   */
   async autocomplete(
     input: string,
     options?: AutocompleteOptions
-  ): Promise<ApiResponse<AutocompleteResult[]>> {
-    if (this.provider === 'mappls') {
-      return this.mapplsAutoSuggest(input, options);
-    }
-    return this.olaAutocomplete(input, options);
-  }
-
-  /** @deprecated Use autocomplete() instead */
-  async autoSuggest(
-    query: string,
-    options?: AutocompleteOptions
-  ): Promise<ApiResponse<AutocompleteResult[]>> {
-    return this.autocomplete(query, options);
-  }
-
-  async geocode(
-    address: string,
-    language?: Language,
-    _bounds?: string
-  ): Promise<ApiResponse<GeocodeResult[]>> {
-    if (this.provider === 'mappls') {
-      return this.mapplsGeocode(address);
-    }
-    return this.olaGeocode(address, language);
-  }
-
-  async reverseGeocode(
-    lat: number,
-    lng: number,
-    language?: Language
-  ): Promise<ApiResponse<ReverseGeocodeResult[]>> {
-    if (this.provider === 'mappls') {
-      return this.mapplsReverseGeocode(lat, lng);
-    }
-    return this.olaReverseGeocode(lat, lng, language);
-  }
-
-  async placeDetails(
-    placeId: string,
-    language?: Language
-  ): Promise<ApiResponse<PlaceDetails>> {
-    if (this.provider === 'mappls') {
-      return this.mapplsPlaceDetails(placeId);
-    }
-    return this.olaPlaceDetails(placeId, language);
-  }
-
-  async placeDetailsAdvanced(
-    placeId: string,
-    language?: Language
-  ): Promise<ApiResponse<PlaceDetails>> {
-    return this.placeDetails(placeId, language);
-  }
-
-  async nearbySearch(
-    location: LatLngLiteral,
-    options?: NearbySearchOptions
-  ): Promise<ApiResponse<NearbySearchResult[]>> {
-    if (this.provider === 'mappls') {
-      return this.mapplsNearbySearch(location, options);
-    }
-    return this.olaNearbySearch(location, options);
-  }
-
-  async nearbySearchAdvanced(
-    location: LatLngLiteral,
-    options?: NearbySearchOptions
-  ): Promise<ApiResponse<NearbySearchResult[]>> {
-    return this.nearbySearch(location, options);
-  }
-
-  async textSearch(
-    input: string,
-    options?: TextSearchOptions
-  ): Promise<ApiResponse<TextSearchResult[]>> {
-    if (this.provider === 'mappls') {
-      return this.autocomplete(input, options) as Promise<
-        ApiResponse<TextSearchResult[]>
-      >;
-    }
-    return this.olaTextSearch(input, options);
-  }
-
-  async addressValidation(
-    address: string
-  ): Promise<ApiResponse<GeocodeResult>> {
-    const response = await this.geocode(address);
-    return ok(response.data[0] as GeocodeResult);
-  }
-
-  // --- Ola Maps implementations ---
-
-  private async olaAutocomplete(
-    input: string,
-    options?: AutocompleteOptions
-  ): Promise<ApiResponse<AutocompleteResult[]>> {
+  ): Promise<AutocompleteSuggestion[]> {
     this.requireAccessToken('PlacesApi.autocomplete');
-    const response = await this.request<{ predictions?: AutocompleteResult[] }>(
-      '/places/v1/autocomplete',
-      {
+    if (this.provider === 'mappls') {
+      const response = await this.request<Raw>('/api/places/search/json', {
         params: {
-          input,
+          query: input,
           location: options?.location
             ? toLatLngString(options.location)
             : undefined,
-          radius: options?.radius,
-          strictbounds: options?.strictbounds,
-          language: options?.language,
-          types: options?.types,
+          zoom: options?.zoom,
+          filter: options?.filter,
+          pod: options?.pod,
+          tokenizeAddress: options?.tokenizeAddress,
+          hyperLocal: options?.hyperLocal,
         },
-      }
-    );
-    return ok(response.predictions ?? []);
-  }
+      });
+      return arrayOf(response.suggestedLocations).map(normalizeSuggestion);
+    }
 
-  private async olaGeocode(
-    address: string,
-    language?: Language
-  ): Promise<ApiResponse<GeocodeResult[]>> {
-    this.requireAccessToken('PlacesApi.geocode');
-    const response = await this.request<{
-      geocodingResults?: GeocodeResult[];
-    }>('/places/v1/geocode', {
-      params: { address, language },
-    });
-    return ok(response.geocodingResults ?? []);
-  }
-
-  private async olaReverseGeocode(
-    lat: number,
-    lng: number,
-    language?: Language
-  ): Promise<ApiResponse<ReverseGeocodeResult[]>> {
-    this.requireAccessToken('PlacesApi.reverseGeocode');
-    const response = await this.request<{
-      results?: ReverseGeocodeResult[];
-    }>('/places/v1/reverse-geocode', {
-      params: { latlng: `${lat},${lng}`, language },
-    });
-    return ok(response.results ?? []);
-  }
-
-  private async olaPlaceDetails(
-    placeId: string,
-    language?: Language
-  ): Promise<ApiResponse<PlaceDetails>> {
-    this.requireAccessToken('PlacesApi.placeDetails');
-    const response = await this.request<{ result?: PlaceDetails }>(
-      '/places/v1/details',
-      {
-        params: { place_id: placeId, language },
-      }
-    );
-    return ok(response.result ?? {});
-  }
-
-  private async olaNearbySearch(
-    location: LatLngLiteral,
-    options?: NearbySearchOptions
-  ): Promise<ApiResponse<NearbySearchResult[]>> {
-    this.requireAccessToken('PlacesApi.nearbySearch');
-    const response = await this.request<{ predictions?: NearbySearchResult[] }>(
-      '/places/v1/nearbysearch',
-      {
-        params: {
-          location: `${location.lat},${location.lng}`,
-          radius: options?.radius,
-          types: options?.types,
-          keyword: options?.keyword,
-          language: options?.language,
-          rankby: options?.rankBy ?? options?.rankby,
-        },
-      }
-    );
-    return ok(response.predictions ?? []);
-  }
-
-  private async olaTextSearch(
-    input: string,
-    options?: TextSearchOptions
-  ): Promise<ApiResponse<TextSearchResult[]>> {
-    this.requireAccessToken('PlacesApi.textSearch');
-    const response = await this.request<{ predictions?: TextSearchResult[] }>(
-      '/places/v1/textsearch',
-      {
-        params: {
-          input,
-          location: options?.location
-            ? toLatLngString(options.location)
-            : undefined,
-          radius: options?.radius,
-          types: options?.types,
-          language: options?.language,
-        },
-      }
-    );
-    return ok(response.predictions ?? []);
-  }
-
-  // --- Mappls implementations ---
-
-  private async mapplsAutoSuggest(
-    query: string,
-    options?: AutocompleteOptions
-  ): Promise<ApiResponse<AutocompleteResult[]>> {
-    this.requireAccessToken('PlacesApi.autocomplete');
-    const response = await this.request<{
-      suggestedLocations?: AutocompleteResult[];
-    }>('/api/places/search/json', {
+    const response = await this.request<Raw>('/places/v1/autocomplete', {
       params: {
-        query,
+        input,
         location: options?.location
           ? toLatLngString(options.location)
           : undefined,
-        zoom: options?.zoom,
-        filter: options?.filter,
-        pod: options?.pod,
-        tokenizeAddress: options?.tokenizeAddress,
-      },
-    });
-    return ok(response.suggestedLocations ?? []);
-  }
-
-  private async mapplsGeocode(
-    address: string
-  ): Promise<ApiResponse<GeocodeResult[]>> {
-    this.requireAccessToken('PlacesApi.geocode');
-    const response = await this.request<{ copResults?: GeocodeResult[] }>(
-      '/api/places/geocode',
-      {
-        params: { address },
-      }
-    );
-    return ok(response.copResults ?? []);
-  }
-
-  private async mapplsReverseGeocode(
-    lat: number,
-    lng: number
-  ): Promise<ApiResponse<ReverseGeocodeResult[]>> {
-    this.requireAccessToken('PlacesApi.reverseGeocode');
-    const response = await this.request<{
-      results?: ReverseGeocodeResult[];
-    }>('/api/places/geocode', {
-      params: { lat, lng },
-    });
-    return ok(response.results ?? []);
-  }
-
-  private async mapplsPlaceDetails(
-    mapplsPin: string
-  ): Promise<ApiResponse<PlaceDetails>> {
-    this.requireAccessToken('PlacesApi.placeDetails');
-    const response = await this.request<PlaceDetails>(
-      `/api/places/place_detail/${mapplsPin}`
-    );
-    return ok(response);
-  }
-
-  private async mapplsNearbySearch(
-    location: LatLngLiteral,
-    options?: NearbySearchOptions
-  ): Promise<ApiResponse<NearbySearchResult[]>> {
-    this.requireAccessToken('PlacesApi.nearbySearch');
-    const response = await this.request<{
-      suggestedLocations?: NearbySearchResult[];
-    }>('/api/places/nearby/json', {
-      params: {
-        keyword: options?.keyword ?? options?.types ?? '',
-        location: `${location.lat},${location.lng}`,
-        page: options?.page,
         radius: options?.radius,
-        bounds: options?.bounds,
-        filter: options?.filter,
-        richData: options?.richData,
-        sortBy: options?.sortBy,
+        strictbounds: options?.strictBounds,
+        language: options?.language,
+        types: options?.types,
       },
     });
-    return ok(response.suggestedLocations ?? []);
+    return arrayOf(response.predictions).map(normalizeSuggestion);
   }
 
-  toMapplsLocation(location: LatLngLiteral) {
-    return `${location.lat},${location.lng}`;
+  /**
+   * @deprecated Use {@linkcode PlacesApi.autocomplete}.
+   */
+  async autoSuggest(
+    query: string,
+    options?: AutocompleteOptions
+  ): Promise<AutocompleteSuggestion[]> {
+    return this.autocomplete(query, options);
+  }
+
+  /**
+   * Converts an address into coordinates.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, network or API failure.
+   */
+  async geocode(
+    address: string,
+    options?: GeocodeOptions
+  ): Promise<GeocodeResult[]> {
+    this.requireAccessToken('PlacesApi.geocode');
+    if (this.provider === 'mappls') {
+      const response = await this.request<Raw>('/api/places/geocode', {
+        params: { address },
+      });
+      return arrayOf(response.copResults).map(normalizePlace);
+    }
+
+    const response = await this.request<Raw>('/places/v1/geocode', {
+      params: { address, language: options?.language },
+    });
+    return arrayOf(response.geocodingResults).map(normalizePlace);
+  }
+
+  /**
+   * Converts a coordinate into nearby addresses.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, network or API failure.
+   */
+  async reverseGeocode(
+    location: LatLngInput,
+    options?: ReverseGeocodeOptions
+  ): Promise<ReverseGeocodeResult[]> {
+    this.requireAccessToken('PlacesApi.reverseGeocode');
+    const [lng, lat] = toLngLat(location);
+    if (this.provider === 'mappls') {
+      const response = await this.request<Raw>('/api/places/geocode', {
+        params: { lat, lng },
+      });
+      const inner = (response.response ?? response ?? {}) as Raw;
+      return arrayOf(inner.results).map(normalizePlace);
+    }
+
+    const response = await this.request<Raw>('/places/v1/reverse-geocode', {
+      params: { latlng: `${lat},${lng}`, language: options?.language },
+    });
+    return arrayOf(response.results).map(normalizePlace);
+  }
+
+  /**
+   * Returns details for a place identified by `placeId` (an Ola Maps
+   * `place_id` or a Mappls eLoc/`mapplsPin`).
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, network or API failure.
+   */
+  async placeDetails(
+    placeId: string,
+    options?: PlaceDetailsOptions
+  ): Promise<PlaceDetails> {
+    this.requireAccessToken('PlacesApi.placeDetails');
+    if (this.provider === 'mappls') {
+      const response = await this.request<Raw>(
+        `/api/places/place_detail/${placeId}`
+      );
+      return normalizePlaceDetails(response);
+    }
+
+    const response = await this.request<Raw>('/places/v1/details', {
+      params: { place_id: placeId, language: options?.language },
+    });
+    return normalizePlaceDetails((response.result ?? {}) as Raw);
+  }
+
+  /**
+   * @deprecated Use {@linkcode PlacesApi.placeDetails}.
+   */
+  async placeDetailsAdvanced(
+    placeId: string,
+    options?: PlaceDetailsOptions
+  ): Promise<PlaceDetails> {
+    return this.placeDetails(placeId, options);
+  }
+
+  /**
+   * Returns places near a coordinate.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, network or API failure.
+   */
+  async nearbySearch(
+    location: LatLngInput,
+    options?: NearbySearchOptions
+  ): Promise<NearbySearchResult[]> {
+    this.requireAccessToken('PlacesApi.nearbySearch');
+    const locationString = toLatLngString(location);
+    if (this.provider === 'mappls') {
+      const response = await this.request<Raw>('/api/places/nearby/json', {
+        params: {
+          keywords: options?.keyword ?? options?.types ?? '',
+          location: locationString,
+          page: options?.page,
+          radius: options?.radius,
+          bounds: options?.bounds,
+          filter: options?.filter,
+          richData: options?.richData,
+          sortBy: options?.sortBy,
+        },
+      });
+      return arrayOf(response.suggestedLocations).map(normalizeSuggestion);
+    }
+
+    const response = await this.request<Raw>('/places/v1/nearbysearch', {
+      params: {
+        location: locationString,
+        radius: options?.radius,
+        types: options?.types,
+        keyword: options?.keyword,
+        language: options?.language,
+        rankby: options?.rankBy,
+      },
+    });
+    return arrayOf(response.predictions).map(normalizeSuggestion);
+  }
+
+  /**
+   * @deprecated Use {@linkcode PlacesApi.nearbySearch}.
+   */
+  async nearbySearchAdvanced(
+    location: LatLngInput,
+    options?: NearbySearchOptions
+  ): Promise<NearbySearchResult[]> {
+    return this.nearbySearch(location, options);
+  }
+
+  /**
+   * Searches places with a free-text query.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, network or API failure.
+   */
+  async textSearch(
+    input: string,
+    options?: TextSearchOptions
+  ): Promise<TextSearchResult[]> {
+    this.requireAccessToken('PlacesApi.textSearch');
+    if (this.provider === 'mappls') {
+      return this.autocomplete(input, options);
+    }
+
+    const response = await this.request<Raw>('/places/v1/textsearch', {
+      params: {
+        input,
+        location: options?.location
+          ? toLatLngString(options.location)
+          : undefined,
+        radius: options?.radius,
+        types: options?.types,
+        language: options?.language,
+      },
+    });
+    return arrayOf(response.predictions).map(normalizeSuggestion);
+  }
+
+  /**
+   * Validates an address by geocoding it and returning the best match, or
+   * `undefined` when the address has no results.
+   *
+   * @throws {@linkcode IndiaMapsError} on configuration, network or API failure.
+   */
+  async addressValidation(address: string): Promise<GeocodeResult | undefined> {
+    const results = await this.geocode(address);
+    return results[0];
   }
 }

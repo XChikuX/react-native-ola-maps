@@ -20,6 +20,8 @@ A React Native SDK for India Maps powered by **MapLibre** for rendering and supp
 bun add react-native-india-maps @maplibre/maplibre-react-native@^11.0.0
 ```
 
+Requires React `>=19.2.0` and React Native `>=0.83.0` (Expo SDK 55+ development builds are supported). See [docs/installation.md](./docs/installation.md) for details.
+
 ## Expo setup
 
 Use an Expo development build, not Expo Go.
@@ -148,7 +150,28 @@ const mapplsClient = new IndiaMapsClient({
 
 ## Map styles
 
+Use the `MAP_STYLES` presets or any provider-specific style name:
+
+```ts
+import { MAP_STYLES } from 'react-native-india-maps';
+
+// MAP_STYLES.lightStandard === 'default-light-standard'
+<MapView styleName={MAP_STYLES.darkStandard} style={{ flex: 1 }} />;
+```
+
 Available Ola Maps styles: `default-light-standard`, `default-dark-standard`, `default-light-lite`, `default-dark-lite`, `default-light-full`, `default-dark-full`, `eclipse-light-standard`, `eclipse-dark-standard`, `bolt-light`, `bolt-dark`, `vintage-light`, `vintage-dark`, and more.
+
+## Migrating from 0.2.x
+
+Version 0.3.0 redesigns the public API. The most common changes:
+
+- **Methods return domain types directly.** The `ApiResponse` / `PaginatedResponse` envelopes were removed. For example, `autocomplete` now resolves to `AutocompleteSuggestion[]`, and `geocode` to `GeocodeResult[]`.
+- **Positional, typed signatures.** `geocode(address, options?)`, `reverseGeocode(location, options?)` and `placeDetails(placeId, options?)` take their primary input as a positional argument. Coordinate inputs accept `LatLng`, `{ latitude, longitude }`, `[lng, lat]` or `'lat,lng'` strings (`LatLngInput`).
+- **camelCase option names.** `rankby` → `rankBy`, `strictbounds` → `strictBounds`, `roundtrip` → `roundTrip`, `traffic_metadata` → `trafficMetadata`, `routepreference` → `routePreference`.
+- **Closed unions.** `TravelMode` is `'driving' | 'walking' | 'biking' | 'trucking'`, and `overview` is `'full' | 'simplified' | false`.
+- **Single error type.** All failures throw `IndiaMapsError` with a `code` of `'CONFIGURATION_ERROR' | 'NETWORK_ERROR' | 'API_ERROR' | 'PARSE_ERROR' | 'UNSUPPORTED_ERROR'`.
+- **Renamed/deprecated aliases.** `SnapToRoadPoint` → `RoadPoint`; `autoSuggest` → `autocomplete` (alias kept); `OlaMapsClient`, `OlaMapsProvider`, `useOlaMaps` and `OlaMapViewProps` remain as deprecated aliases.
+- **Style presets.** `MAP_STYLES` exports well-known Ola Maps style names; `MapView` uses `styleName` (default `default-light-standard`) instead of `accessToken`-keyed style resolution.
 
 ## Notes
 

@@ -147,7 +147,7 @@ react-native-ola-maps/
 | HTTP Client     | Native `fetch` (no axios dependency)          |
 | Module System   | Turbo Modules (React Native new architecture) |
 | Testing         | Jest + @testing-library/react-native          |
-| Linting         | ESLint (flat config) + Prettier               |
+| Linting         | ESLint + Prettier (eslintrc)                  |
 | Example App     | Expo                                          |
 
 ---
@@ -188,11 +188,13 @@ react-native-ola-maps/
 
 ### Phase 4: Hooks & Integration
 
-- [ ] useOlaMaps hook
-- [ ] useAutocomplete hook
-- [ ] useDirections hook
-- [ ] useReverseGeocode hook
-- [ ] useGeofencing hook
+- [x] useIndiaMaps hook (context access)
+- [x] useOlaMaps hook (deprecated alias)
+- [x] useAutocomplete hook
+- [x] useDirections hook
+- [x] useReverseGeocode hook
+- [x] useGeofencing hook
+- [x] useAsyncRequest hook primitive
 
 ### Phase 5: Polish
 
