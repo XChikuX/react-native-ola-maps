@@ -1,5 +1,4 @@
 import { BaseApi } from './base';
-import { IndiaMapsError } from '../errors';
 import {
   arrayOf,
   asLngLat,
@@ -14,9 +13,6 @@ import type {
   DirectionsResult,
   DistanceMatrixOptions,
   DistanceMatrixResult,
-  FleetPlannerInput,
-  FleetPlannerResult,
-  FleetPlannerStrategy,
   OverviewLevel,
   Route,
   RouteOptimizerOptions,
@@ -116,17 +112,6 @@ export class RoutingApi extends BaseApi {
   }
 
   /**
-   * @deprecated Use {@linkcode RoutingApi.getDirections}.
-   */
-  async getDirectionsBasic(
-    origin: LatLngInput,
-    destination: LatLngInput,
-    options?: Omit<DirectionsOptions, 'trafficMetadata'>
-  ): Promise<DirectionsResult> {
-    return this.getDirections(origin, destination, options);
-  }
-
-  /**
    * Returns travel distance and duration grids from every origin to every
    * destination.
    *
@@ -170,17 +155,6 @@ export class RoutingApi extends BaseApi {
       }
     );
     return normalizeDistanceMatrix(response);
-  }
-
-  /**
-   * @deprecated Use {@linkcode RoutingApi.getDistanceMatrix}.
-   */
-  async getDistanceMatrixBasic(
-    origins: LatLngInput[],
-    destinations: LatLngInput[],
-    options?: DistanceMatrixOptions
-  ): Promise<DistanceMatrixResult> {
-    return this.getDistanceMatrix(origins, destinations, options);
   }
 
   /**
@@ -230,22 +204,6 @@ export class RoutingApi extends BaseApi {
       }
     );
     return normalizeRouteOptimizer(response);
-  }
-
-  /**
-   * Not available: fleet planning has no public provider REST API.
-   *
-   * @throws {@linkcode IndiaMapsError} with code `'UNSUPPORTED_ERROR'` always.
-   * Use a dedicated fleet-management backend instead.
-   */
-  async fleetPlanner(
-    _inputData: FleetPlannerInput,
-    _strategy: FleetPlannerStrategy
-  ): Promise<FleetPlannerResult> {
-    throw new IndiaMapsError(
-      'Fleet planner is not available as a public REST API. Use a dedicated fleet management backend.',
-      'UNSUPPORTED_ERROR'
-    );
   }
 }
 

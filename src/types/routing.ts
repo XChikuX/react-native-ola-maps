@@ -230,18 +230,3 @@ export type RouteOptimizerResult = {
   /** Provider status code, e.g. `'Ok'`. */
   code?: string;
 };
-
-/**
- * Fleet-planner request payload. Fleet planning has no public provider REST
- * API; see {@linkcode RoutingApi.fleetPlanner}.
- */
-export type FleetPlannerInput = Record<string, unknown>;
-
-/** Fleet-planner optimization strategy. */
-export type FleetPlannerStrategy = 'cost' | 'time' | 'distance';
-
-/**
- * Fleet-planner result. Never produced at runtime; see
- * {@linkcode RoutingApi.fleetPlanner}.
- */
-export type FleetPlannerResult = Record<string, unknown>;

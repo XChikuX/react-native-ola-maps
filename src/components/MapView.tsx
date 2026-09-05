@@ -122,6 +122,3 @@ export const MapView = forwardRef<MapRef, IndiaMapViewProps>(
 );
 
 MapView.displayName = 'MapView';
-
-/** @deprecated Use {@linkcode IndiaMapViewProps}. Kept for backwards compatibility. */
-export type OlaMapViewProps = IndiaMapViewProps;

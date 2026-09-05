@@ -10,9 +10,6 @@ export type RoadPoint = {
   longitude: number;
 };
 
-/** @deprecated Use {@linkcode RoadPoint}. Kept for backwards compatibility. */
-export type SnapToRoadPoint = RoadPoint;
-
 /**
  * A point snapped to the road network, returned by
  * {@linkcode RoadsApi.snapToRoad} and {@linkcode RoadsApi.nearestRoads}.

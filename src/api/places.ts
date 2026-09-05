@@ -131,16 +131,6 @@ export class PlacesApi extends BaseApi {
   }
 
   /**
-   * @deprecated Use {@linkcode PlacesApi.autocomplete}.
-   */
-  async autoSuggest(
-    query: string,
-    options?: AutocompleteOptions
-  ): Promise<AutocompleteSuggestion[]> {
-    return this.autocomplete(query, options);
-  }
-
-  /**
    * Converts an address into coordinates.
    *
    * @throws {@linkcode IndiaMapsError} on configuration, network or API failure.
@@ -213,16 +203,6 @@ export class PlacesApi extends BaseApi {
   }
 
   /**
-   * @deprecated Use {@linkcode PlacesApi.placeDetails}.
-   */
-  async placeDetailsAdvanced(
-    placeId: string,
-    options?: PlaceDetailsOptions
-  ): Promise<PlaceDetails> {
-    return this.placeDetails(placeId, options);
-  }
-
-  /**
    * Returns places near a coordinate.
    *
    * @throws {@linkcode IndiaMapsError} on configuration, network or API failure.
@@ -260,16 +240,6 @@ export class PlacesApi extends BaseApi {
       },
     });
     return arrayOf(response.predictions).map(normalizeSuggestion);
-  }
-
-  /**
-   * @deprecated Use {@linkcode PlacesApi.nearbySearch}.
-   */
-  async nearbySearchAdvanced(
-    location: LatLngInput,
-    options?: NearbySearchOptions
-  ): Promise<NearbySearchResult[]> {
-    return this.nearbySearch(location, options);
   }
 
   /**

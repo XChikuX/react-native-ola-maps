@@ -62,9 +62,7 @@ react-native-ola-maps/
 - `geocode(address, language?)` → lat/lng from address
 - `reverseGeocode(lat, lng, language?)` → address from lat/lng
 - `placeDetails(placeId, language?)` → place info
-- `placeDetailsAdvanced(placeId, language?)` → extended place info
 - `nearbySearch(location, options?)` → nearby places
-- `nearbySearchAdvanced(location, options?)` → nearby places (advanced)
 - `textSearch(input, options?)` → free-text search
 - `addressValidation(address)` → validate an address
 - `photo(photoReference)` → place photo
@@ -72,11 +70,8 @@ react-native-ola-maps/
 ### 2. Routing API
 
 - `getDirections(origin, destination, options?)` → route with traffic
-- `getDirectionsBasic(origin, destination, options?)` → route without traffic
 - `getDistanceMatrix(origins, destinations, options?)` → distance/duration matrix
-- `getDistanceMatrixBasic(origins, destinations, options?)` → basic matrix
 - `routeOptimizer(locations, options?)` → optimized route
-- `fleetPlanner(inputData, strategy, options?)` → fleet optimization
 
 ### 3. Roads API
 
@@ -189,7 +184,6 @@ react-native-ola-maps/
 ### Phase 4: Hooks & Integration
 
 - [x] useIndiaMaps hook (context access)
-- [x] useOlaMaps hook (deprecated alias)
 - [x] useAutocomplete hook
 - [x] useDirections hook
 - [x] useReverseGeocode hook

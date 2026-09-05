@@ -1,5 +1,4 @@
 export { useIndiaMaps } from './useIndiaMaps';
-export { useOlaMaps } from './useOlaMaps';
 export { useAutocomplete } from './useAutocomplete';
 export type { UseAutocompleteOptions } from './useAutocomplete';
 export { useDirections } from './useDirections';

@@ -1,7 +1,7 @@
-export { default, IndiaMapsClient, OlaMapsClient } from './IndiaMapsClient';
+export { default, IndiaMapsClient } from './IndiaMapsClient';
 export { VERSION } from './version';
-export { IndiaMapsError, OlaMapsError } from './errors';
-export type { IndiaMapsErrorCode, OlaMapsErrorCode } from './errors';
+export { IndiaMapsError } from './errors';
+export type { IndiaMapsErrorCode } from './errors';
 export * from './api';
 export * from './providers';
 export * from './hooks';

@@ -170,14 +170,31 @@ Version 0.3.0 redesigns the public API. The most common changes:
 - **camelCase option names.** `rankby` → `rankBy`, `strictbounds` → `strictBounds`, `roundtrip` → `roundTrip`, `traffic_metadata` → `trafficMetadata`, `routepreference` → `routePreference`.
 - **Closed unions.** `TravelMode` is `'driving' | 'walking' | 'biking' | 'trucking'`, and `overview` is `'full' | 'simplified' | false`.
 - **Single error type.** All failures throw `IndiaMapsError` with a `code` of `'CONFIGURATION_ERROR' | 'NETWORK_ERROR' | 'API_ERROR' | 'PARSE_ERROR' | 'UNSUPPORTED_ERROR'`.
-- **Renamed/deprecated aliases.** `SnapToRoadPoint` → `RoadPoint`; `autoSuggest` → `autocomplete` (alias kept); `OlaMapsClient`, `OlaMapsProvider`, `useOlaMaps` and `OlaMapViewProps` remain as deprecated aliases.
 - **Style presets.** `MAP_STYLES` exports well-known Ola Maps style names; `MapView` uses `styleName` (default `default-light-standard`) instead of `accessToken`-keyed style resolution.
+
+### Migrating from 0.4.x
+
+Version 0.5.0 removes previously-deprecated aliases. Update your imports:
+
+- Replace `OlaMapsClient` with `IndiaMapsClient`
+- Replace `OlaMapsProvider` with `IndiaMapsProvider`
+- Replace `useOlaMaps` with `useIndiaMaps`
+- Replace `OlaMapsConfig` with `IndiaMapsConfig`
+- Replace `OlaMapsError` with `IndiaMapsError`
+- Replace `OlaMapsErrorCode` with `IndiaMapsErrorCode`
+- Replace `OlaMapViewProps` with `IndiaMapViewProps`
+- Replace `SnapToRoadPoint` with `RoadPoint`
+- Replace `autoSuggest` with `autocomplete` (no longer an alias)
+- Replace `placeDetailsAdvanced` with `placeDetails` (no longer an alias)
+- Replace `nearbySearchAdvanced` with `nearbySearch` (no longer an alias)
+- Replace `getDirectionsBasic` with `getDirections` (no longer an alias)
+- Replace `getDistanceMatrixBasic` with `getDistanceMatrix` (no longer an alias)
+- `RoutingApi.fleetPlanner` has been removed — fleet planning has no public REST API
 
 ## Notes
 
 - `apiKey` is used for Ola Maps API authentication
 - `accessToken` is used for Mappls API authentication
-- Legacy `OlaMapsClient`, `OlaMapsProvider`, and `useOlaMaps` aliases are exported for compatibility
 
 ## License
 

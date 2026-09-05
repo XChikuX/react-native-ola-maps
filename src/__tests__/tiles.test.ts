@@ -72,7 +72,7 @@ describe('TilesApi', () => {
         width: 600,
         height: 400,
       })
-    ).toThrowError(expect.objectContaining({ code: 'CONFIGURATION_ERROR' }));
+    ).toThrow(expect.objectContaining({ code: 'CONFIGURATION_ERROR' }));
   });
 
   it('returns v11-compatible map options', () => {

@@ -8,18 +8,18 @@ const jsonResponse = (body: unknown) => ({
   text: jest.fn().mockResolvedValue(JSON.stringify(body)),
 });
 
-const fetchMock = globalThis.fetch as jest.Mock;
+const g = globalThis as unknown as { fetch: jest.Mock };
 
 describe('API endpoint construction (Ola Maps)', () => {
   let client: IndiaMapsClient;
 
   beforeEach(() => {
     client = new IndiaMapsClient({ accessToken: 'test-token' });
-    fetchMock.mockResolvedValue(jsonResponse({ results: [] }));
+    g.fetch = jest.fn().mockResolvedValue(jsonResponse({ results: [] }));
   });
 
   it('uses Ola elevation endpoint', async () => {
-    fetchMock.mockResolvedValue(
+    g.fetch = jest.fn().mockResolvedValue(
       jsonResponse({
         results: [
           { elevation: 830, location: { latitude: 12.9, longitude: 77.6 } },
@@ -27,30 +27,32 @@ describe('API endpoint construction (Ola Maps)', () => {
       })
     );
     await client.elevation.getElevation(12.9, 77.6);
-    expect(fetchMock.mock.calls[0][0]).toContain('/elevation/v1/getElevation');
-    expect(fetchMock.mock.calls[0][0]).toContain('locations=12.9%2C77.6');
-    expect(fetchMock.mock.calls[0][0]).toContain('api_key=test-token');
+    expect(g.fetch).toHaveBeenCalled();
+    const url = (g.fetch as jest.Mock).mock.calls[0][0] as string;
+    expect(url).toContain('/elevation/v1/getElevation');
+    expect(url).toContain('locations=12.9%2C77.6');
+    expect(url).toContain('api_key=test-token');
   });
 
   it('uses Ola route optimizer endpoint', async () => {
     await client.routing.routeOptimizer(['12.9,77.6', '13.05,77.7']);
-    const optimizerUrl = fetchMock.mock.calls[0][0] as string;
-    expect(optimizerUrl).toContain(
+    const url = (g.fetch as jest.Mock).mock.calls[0][0] as string;
+    expect(url).toContain(
       '/routing/v1/routeOptimizer/driving/77.6,12.9;77.7,13.05'
     );
-    expect(optimizerUrl).toContain('api_key=test-token');
+    expect(url).toContain('api_key=test-token');
   });
 
   it('uses Ola snap to road endpoint', async () => {
     await client.roads.snapToRoad([{ latitude: 12.9, longitude: 77.6 }], true);
-    const url = fetchMock.mock.calls[0][0] as string;
+    const url = (g.fetch as jest.Mock).mock.calls[0][0] as string;
     expect(url).toContain('/routing/v1/snapToRoad');
     expect(url).toContain('points=12.9%2C77.6');
   });
 
   it('uses Ola directions endpoint with waypoint order preserved', async () => {
     await client.routing.getDirections('12.9,77.6', '13.05,77.7');
-    const url = fetchMock.mock.calls[0][0] as string;
+    const url = (g.fetch as jest.Mock).mock.calls[0][0] as string;
     expect(url).toContain(
       '/routing/v1/directions/driving/77.6,12.9;77.7,13.05'
     );
@@ -58,9 +60,9 @@ describe('API endpoint construction (Ola Maps)', () => {
   });
 
   it('uses Ola autocomplete endpoint', async () => {
-    fetchMock.mockResolvedValue(jsonResponse({ predictions: [] }));
+    g.fetch = jest.fn().mockResolvedValue(jsonResponse({ predictions: [] }));
     await client.places.autocomplete('bangalore');
-    const url = fetchMock.mock.calls[0][0] as string;
+    const url = (g.fetch as jest.Mock).mock.calls[0][0] as string;
     expect(url).toContain('/places/v1/autocomplete');
     expect(url).toContain('input=bangalore');
     expect(url).toContain('api_key=test-token');
@@ -82,11 +84,11 @@ describe('API endpoint construction (Mappls)', () => {
       accessToken: 'test-token',
       provider: 'mappls',
     });
-    fetchMock.mockResolvedValue(jsonResponse({ results: [] }));
+    g.fetch = jest.fn().mockResolvedValue(jsonResponse({ results: [] }));
   });
 
   it('uses Mappls elevation endpoint', async () => {
-    fetchMock.mockResolvedValue(
+    g.fetch = jest.fn().mockResolvedValue(
       jsonResponse({
         results: [
           { elevation: 830, location: { latitude: 12.9, longitude: 77.6 } },
@@ -94,22 +96,24 @@ describe('API endpoint construction (Mappls)', () => {
       })
     );
     await client.elevation.getElevation(12.9, 77.6);
-    const url = fetchMock.mock.calls[0][0] as string;
+    const url = (g.fetch as jest.Mock).mock.calls[0][0] as string;
     expect(url).toContain('/advancedmaps/v1/test-token/elevation');
     expect(url).toContain('locations=12.9%2C77.6');
   });
 
   it('uses Mappls autosuggest endpoint', async () => {
-    fetchMock.mockResolvedValue(jsonResponse({ suggestedLocations: [] }));
+    g.fetch = jest
+      .fn()
+      .mockResolvedValue(jsonResponse({ suggestedLocations: [] }));
     await client.places.autocomplete('delhi');
-    const url = fetchMock.mock.calls[0][0] as string;
+    const url = (g.fetch as jest.Mock).mock.calls[0][0] as string;
     expect(url).toContain('/api/places/search/json');
     expect(url).toContain('query=delhi');
     expect(url).toContain('access_token=test-token');
   });
 
   it('rejects geofencing with an unsupported error', async () => {
-    await expect(client.geofencing.list('project-1')).rejects.toThrowError(
+    await expect(client.geofencing.list('project-1')).rejects.toThrow(
       expect.objectContaining({ code: 'UNSUPPORTED_ERROR' })
     );
   });
@@ -117,9 +121,7 @@ describe('API endpoint construction (Mappls)', () => {
   it('rejects speed limits with an unsupported error', async () => {
     await expect(
       client.roads.speedLimits([{ latitude: 12.9, longitude: 77.6 }])
-    ).rejects.toThrowError(
-      expect.objectContaining({ code: 'UNSUPPORTED_ERROR' })
-    );
+    ).rejects.toThrow(expect.objectContaining({ code: 'UNSUPPORTED_ERROR' }));
   });
 });
 
@@ -128,10 +130,11 @@ describe('Response normalization (Ola Maps)', () => {
 
   beforeEach(() => {
     client = new IndiaMapsClient({ accessToken: 'test-token' });
+    g.fetch = jest.fn().mockResolvedValue(jsonResponse({ results: [] }));
   });
 
   it('normalizes autocomplete predictions', async () => {
-    fetchMock.mockResolvedValue(
+    g.fetch = jest.fn().mockResolvedValue(
       jsonResponse({
         predictions: [
           {
@@ -157,7 +160,7 @@ describe('Response normalization (Ola Maps)', () => {
   });
 
   it('normalizes geocoding results', async () => {
-    fetchMock.mockResolvedValue(
+    g.fetch = jest.fn().mockResolvedValue(
       jsonResponse({
         geocodingResults: [
           {
@@ -178,7 +181,7 @@ describe('Response normalization (Ola Maps)', () => {
   });
 
   it('normalizes directions routes and steps', async () => {
-    fetchMock.mockResolvedValue(
+    g.fetch = jest.fn().mockResolvedValue(
       jsonResponse({
         code: 'Ok',
         routes: [
@@ -207,7 +210,7 @@ describe('Response normalization (Ola Maps)', () => {
   });
 
   it('normalizes Ola distance matrix cells into grids', async () => {
-    fetchMock.mockResolvedValue(
+    g.fetch = jest.fn().mockResolvedValue(
       jsonResponse({
         distanceMatrix: [
           {
@@ -228,7 +231,7 @@ describe('Response normalization (Ola Maps)', () => {
   });
 
   it('normalizes elevation results', async () => {
-    fetchMock.mockResolvedValue(
+    g.fetch = jest.fn().mockResolvedValue(
       jsonResponse({
         results: [
           {
@@ -246,7 +249,7 @@ describe('Response normalization (Ola Maps)', () => {
   });
 
   it('normalizes snapped points', async () => {
-    fetchMock.mockResolvedValue(
+    g.fetch = jest.fn().mockResolvedValue(
       jsonResponse({
         snappedPoints: [
           {
@@ -269,7 +272,7 @@ describe('Response normalization (Ola Maps)', () => {
   });
 
   it('validates addresses from the first geocode match', async () => {
-    fetchMock.mockResolvedValue(
+    g.fetch = jest.fn().mockResolvedValue(
       jsonResponse({
         geocodingResults: [
           { place_id: 'p3', formatted_address: 'Pune, Maharashtra' },
@@ -282,20 +285,22 @@ describe('Response normalization (Ola Maps)', () => {
   });
 
   it('wraps network failures in IndiaMapsError', async () => {
-    fetchMock.mockRejectedValue(new TypeError('Network request failed'));
-    await expect(client.places.geocode('Mumbai')).rejects.toThrowError(
+    g.fetch = jest
+      .fn()
+      .mockRejectedValue(new TypeError('Network request failed'));
+    await expect(client.places.geocode('Mumbai')).rejects.toThrow(
       expect.objectContaining({ code: 'NETWORK_ERROR' })
     );
   });
 
   it('wraps API failures in IndiaMapsError with status', async () => {
-    fetchMock.mockResolvedValue({
+    g.fetch = jest.fn().mockResolvedValue({
       ok: false,
       status: 401,
       headers: { get: () => 'application/json' },
       json: jest.fn().mockResolvedValue({ error: 'unauthorized' }),
     });
-    await expect(client.places.geocode('Mumbai')).rejects.toThrowError(
+    await expect(client.places.geocode('Mumbai')).rejects.toThrow(
       expect.objectContaining({ code: 'API_ERROR', status: 401 })
     );
   });
@@ -309,10 +314,11 @@ describe('Response normalization (Mappls)', () => {
       accessToken: 'test-token',
       provider: 'mappls',
     });
+    g.fetch = jest.fn().mockResolvedValue(jsonResponse({ results: [] }));
   });
 
   it('normalizes autosuggest locations', async () => {
-    fetchMock.mockResolvedValue(
+    g.fetch = jest.fn().mockResolvedValue(
       jsonResponse({
         suggestedLocations: [
           {
@@ -337,7 +343,7 @@ describe('Response normalization (Mappls)', () => {
   });
 
   it('normalizes OSRM-style distance matrix grids', async () => {
-    fetchMock.mockResolvedValue(
+    g.fetch = jest.fn().mockResolvedValue(
       jsonResponse({
         code: 'Ok',
         distances: [[100, 200]],

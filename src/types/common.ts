@@ -92,6 +92,3 @@ export type IndiaMapsConfig = {
   /** Overrides the default base URL for tile style endpoints. */
   tileBaseUrl?: string;
 };
-
-/** @deprecated Use {@linkcode IndiaMapsConfig}. Kept for backwards compatibility. */
-export type OlaMapsConfig = IndiaMapsConfig;

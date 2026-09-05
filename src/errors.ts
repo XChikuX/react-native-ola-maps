@@ -48,8 +48,3 @@ export class IndiaMapsError extends Error {
     this.response = options?.response;
   }
 }
-
-/** @deprecated Use {@linkcode IndiaMapsError}. Kept for backwards compatibility. */
-export { IndiaMapsError as OlaMapsError };
-/** @deprecated Use {@linkcode IndiaMapsErrorCode}. Kept for backwards compatibility. */
-export type OlaMapsErrorCode = IndiaMapsErrorCode;

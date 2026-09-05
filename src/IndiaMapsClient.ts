@@ -52,6 +52,4 @@ export class IndiaMapsClient {
   }
 }
 
-/** @deprecated Use {@linkcode IndiaMapsClient}. Kept for backwards compatibility. */
-export { IndiaMapsClient as OlaMapsClient };
 export default IndiaMapsClient;
